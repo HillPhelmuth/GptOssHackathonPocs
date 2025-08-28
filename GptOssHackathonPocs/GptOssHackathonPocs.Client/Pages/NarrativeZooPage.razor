@@ -1,47 +1,6 @@
 ﻿@page "/narrativezoo"
 
-@* <h3>Narrative Zoo</h3>
 
-<div class="mb-3">
-    <label for="userInput" class="form-label">User input</label>
-    <input id="userInput" class="form-control" placeholder="Enter a nudge or instruction for the World Engine" @bind="_userInput" />
-</div>
-
-<div class="mb-3 d-flex gap-2">
-    <button class="btn btn-primary" @onclick="RunAsync" disabled="@_isRunning">Run</button>
-    <button class="btn btn-secondary" @onclick="Cancel" disabled="@(!_isRunning)">Cancel</button>
-    <button class="btn btn-outline-danger" @onclick="Clear">Clear</button>
-</div>
-
-<div class="row">
-    <div class="col-md-4">
-        <h5>Agents</h5>
-        <ul class="list-group">
-            @foreach (var a in WorldState.WorldAgents.Agents)
-            {
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <span>@a.AgentId</span>
-                </li>
-            }
-        </ul>
-    </div>
-    <div class="col-md-8">
-        <h5>Orchestration Log</h5>
-        <div class="border rounded p-2" style="height: 420px; overflow:auto; background-color: #0f0f0f; color: #eaeaea;">
-            @if (_log.Count == 0)
-            {
-                <div class="text-muted">No messages yet. Click Run to start the simulation.</div>
-            }
-            else
-            {
-                @foreach (var line in _log)
-                {
-                    <div style="white-space: pre-wrap">@line</div>
-                }
-            }
-        </div>
-    </div>
-</div> *@
 <Main></Main>
 @code {
     // Code-behind is implemented in the .razor.cs partial class.

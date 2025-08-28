@@ -54,6 +54,8 @@ public sealed class FirmsActiveFiresFeed : IIncidentFeed
             var timestamp = ParseTimestampUtc(row.acq_date, row.acq_time); // FIRMS dates are GMT
             var severity = MapSeverity(row.confidence);
 
+            // Build a Feature with properties similar to NWS feed: source, severity, title (+ FIRMS metadata)
+            var title = $"Active fire (FIRMS {row.satellite}/{row.instrument}) at {row.latitude:F4}, {row.longitude:F4}";
             var feature = new
             {
                 type = "Feature",
@@ -64,6 +66,11 @@ public sealed class FirmsActiveFiresFeed : IIncidentFeed
                 },
                 properties = new
                 {
+                    // standard properties for popup and styling
+                    source = nameof(IncidentSource.NasaFirms),
+                    severity = severity.ToString().ToLowerInvariant(),
+                    title,
+                    // FIRMS-specific metadata
                     dataset = _opt.Dataset,
                     row.confidence,
                     row.frp,
@@ -84,8 +91,8 @@ public sealed class FirmsActiveFiresFeed : IIncidentFeed
                 Id = id,
                 Source = IncidentSource.NasaFirms, // add this to your enum if it isn't there yet
                 Severity = severity,
-                Title = $"Active fire (FIRMS {row.satellite}/{row.instrument}) at {row.latitude:F4}, {row.longitude:F4}",
-                Description = $"Confidence: {row.confidence?.ToUpperInvariant() ?? "n/a"}, FRP: {row.frp:F1} MW, Day/Night: {row.daynight}",
+                Title = title,
+                Description = $"Confidence: {row.confidence?.ToUpperInvariant() ?? "n/a"}, Fire Radiative Power:  {row.frp:F1} MW, Day/Night: {row.daynight}",
                 Timestamp = timestamp,
                 GeoJson = geoJson,
                 Link = url // points back to the query used
@@ -98,6 +105,8 @@ public sealed class FirmsActiveFiresFeed : IIncidentFeed
     private static string BuildAreaApiUrl(FirmsOptions opt)
     {
         // area can be: "world" OR "minLon,minLat,maxLon,maxLat" (comma-separated, no spaces)
+        var usAreaLatLong = "-125.0,24.0,-66.5,49.5"; // CONUS bounding box
+        opt.Area = usAreaLatLong;
         var area = string.IsNullOrWhiteSpace(opt.Area) ? "world" : opt.Area.Trim();
         // Example: https://firms.modaps.eosdis.nasa.gov/api/area/csv/{MAP_KEY}/{DATASET}/{AREA}/{DAY_RANGE}
         var sb = new StringBuilder("https://firms.modaps.eosdis.nasa.gov/api/area/csv/");
@@ -177,7 +186,7 @@ public sealed class FirmsOptions
     public string Dataset { get; init; } = "VIIRS_SNPP_NRT";
 
     /// <summary>"world" or "minLon,minLat,maxLon,maxLat" (WGS84)</summary>
-    public string Area { get; init; } = "world";
+    public string Area { get; set; } = "world";
 
     /// <summary>Number of days to include (e.g., 1 = last 24h)</summary>
     public int DayRange { get; set; } = 1;

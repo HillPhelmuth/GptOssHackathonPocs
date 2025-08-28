@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "storage1": {
+      "serviceConnectorResourceId": "/subscriptions/[parameters('subscriptionId')]/resourcegroups/[parameters('serviceConnectorResourceGroupName')]/providers/Microsoft.ServiceLinker/locations/centralus/connectors/StorageConnection_4CCB8BA501, /subscriptions/b167babc-47d2-4b9e-9fea-c9e2b399ef74/resourcegroups/qloo-hackathon-rg/providers/Microsoft.ServiceLinker/locations/centralus/connectors/StorageConnection_3006834429",
+      "secretStore": "LocalSecretsFile",
+      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourcegroups/[parameters('resourceGroupName')]/providers/Microsoft.Storage/storageAccounts/gptosshackathonpocsstora",
+      "type": "storage.azure",
+      "connectionId": "StorageConnection",
+      "dynamicId": null
+    }
+  }
+}

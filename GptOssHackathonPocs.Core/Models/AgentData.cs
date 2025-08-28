@@ -126,7 +126,7 @@ public sealed record ActionItem
     {
         var sb = new StringBuilder();
         // Add Each property with its description if available and value in markdown format
-        sb.AppendLine($"### Action for Incident {IncidentId}");
+        sb.AppendLine($" **Action for Incident {IncidentId}**");
         sb.AppendLine($"- {LabelWithDesc("Title", nameof(Title))}: {Title}");
         sb.AppendLine($"- {LabelWithDesc("Rationale", nameof(Rationale))}: {Rationale}");
         sb.AppendLine($"- {LabelWithDesc("Evidence Labels", nameof(EvidenceLabels))}: {string.Join(", ", EvidenceLabels)}");
@@ -172,21 +172,7 @@ public sealed record ActionPlan(
         sb.AppendLine("# Action Plan");
         foreach (var action in Actions)
         {
-            sb.AppendLine($"## Action for Incident {action.IncidentId}");
-            sb.AppendLine($"- Title: {action.Title}");
-            sb.AppendLine($"- Rationale: {action.Rationale}");
-            sb.AppendLine($"- Evidence Labels: {string.Join(", ", action.EvidenceLabels)}");
-            sb.AppendLine($"- Required Tools: {string.Join(", ", action.RequiredTools)}");
-            sb.AppendLine($"- Priority: {action.Priority}");
-            sb.AppendLine($"- Audience: {action.Audience}");
-            if (action.Parameters is { Count: > 0 })
-            {
-                sb.AppendLine("- Parameters:");
-                foreach (var param in action.Parameters)
-                {
-                    sb.AppendLine($"  - {param.Key}: {param.Value}");
-                }
-            }
+            sb.AppendLine(action.ToMarkdown());
             sb.AppendLine();
         }
         return sb.ToString();

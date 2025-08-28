@@ -36,11 +36,20 @@ public partial class TriageDashboard
     {
         if (firstRender)
         {
-            _incidents = await Aggregator.FetchAllAsync();
-            _selected = _incidents?[0];
+            await Refresh(false);
+            StateHasChanged();
+            await Task.Delay(250);
             await GenerateActionPlan();
         }
         await base.OnAfterRenderAsync(firstRender);
+    }
+
+    private async Task Refresh(bool callAi = true)
+    {
+        _incidents = await Aggregator.FetchAllAsync();
+        _selected = _incidents?[0];
+        if (callAi)
+            await GenerateActionPlan();
     }
 
     private void SetTab(Tab tab)
@@ -58,6 +67,7 @@ public partial class TriageDashboard
         var token = _cts.Token;
         Console.WriteLine($"Incident Cards: \n\n{JsonSerializer.Serialize(cards, new JsonSerializerOptions() { WriteIndented = true })}");
         var actionPlan = await Orchestrator.PlanAsync(cards, token);
+        _queue.Clear();
         foreach (var action in actionPlan?.Actions ?? [])
         {
             _queue.Add(new ActionQueue.ActionQueueItem(action.IncidentId ?? "", action.Title, action.Instructions, action.SeverityLevel, action.UrgencyLevel, action.ToMarkdown()));

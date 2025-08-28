@@ -57,7 +57,7 @@ public sealed record IncidentCard
         double SviPercentile, // 0..1 (precomputed)
         string GeometryRef, // server-known key, not raw GeoJSON
         string[] CriticalFacilities, // ["Hospital:BenTaub","School:Foo"]
-        EvidenceLink[] Sources)
+        EvidenceLink[] Sources, string title)
     {
         this.IncidentId = IncidentId;
         this.Type = Type;
@@ -69,8 +69,11 @@ public sealed record IncidentCard
         this.GeometryRef = GeometryRef;
         this.CriticalFacilities = CriticalFacilities;
         this.Sources = Sources;
+        this.Title = title;
     }
-
+    [JsonPropertyName("title")]
+    [Description("A short, human-readable title for the incident.")]
+    public string Title { get; init; }
     /// <summary>
     /// Renders a human-readable Markdown summary of this incident.
     /// </summary>
@@ -154,7 +157,7 @@ public sealed record IncidentCard
     /// </summary>
     [Description("Affected admin area code.")]
     [JsonPropertyName("admin_areas")]
-    public string[] AdminAreas { get; init; }
+    public string[] AdminAreas { get; set; }
 
     /// <summary>
     /// Estimated number of people exposed within the incident geometry.

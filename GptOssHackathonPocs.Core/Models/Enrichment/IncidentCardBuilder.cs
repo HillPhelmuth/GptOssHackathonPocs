@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.IO;
 
@@ -45,6 +45,7 @@ public sealed class IncidentCardBuilder
 
         //var g = _geo.GetGeometry(geometryRef);
         var admin = _admins.ResolveAdminAreas(geom);
+        var adminNames = await GetAdminNames(admin);
         var sviPercentile = 0.5;
         var pop = /*await _pop.EstimatePopulation(geom);*/new Random().Next(0, 25000);
         try
@@ -77,15 +78,34 @@ public sealed class IncidentCardBuilder
             Type: type,
             Severity: sev,
             Timestamp: i.Timestamp,
-            AdminAreas: admin,
+            AdminAreas: adminNames.ToArray(),
             PopulationExposed: pop,
             SviPercentile: svi,
             GeometryRef: geometryRef,
             CriticalFacilities: facilities,
-            Sources: links.ToArray()
+            Sources: links.ToArray(),
+            title: i.Title
         );
     }
 
+    private async Task<List<string>> GetAdminNames(string[] adminIds)
+    {
+        using var http = new HttpClient();
+        var ids = adminIds.Select(id => int.TryParse(id, out var v) ? v : 0).Where(v => v != 0);
+        var results = new List<string>();
+        foreach (var id in ids)
+        {
+            var state = id / 1000;        // 19
+            var county = id % 1000;       // 163, 031, ...
+            var url = $"https://api.census.gov/data/2023/acs/acs5?get=NAME&for=county:{county:D3}&in=state:{state:D2}";
+            var json = await http.GetStringAsync(url); // [["NAME","state","county"],["Scott County, Iowa","19","163"],...]
+            var name = System.Text.Json.JsonDocument.Parse(json).RootElement[1][0].GetString();
+            var format = $"{id} → {name}";
+            results.Add(name ?? id.ToString());
+            Console.WriteLine(format);
+        }
+        return results;
+    }
     private static double? TryParseMagnitude(string? s)
     {
         if (string.IsNullOrWhiteSpace(s)) return null;

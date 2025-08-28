@@ -27,11 +27,12 @@
     appearance: none;
     border: none;
     background: transparent;
-    padding: 10px 14px;
+    padding: 5px 7px;
     border-radius: 8px 8px 0 0;
     color: #64748b;
     cursor: pointer;
-    font-weight: 600
+    font-weight: 600;
+    font-size: 85%;
 }
 
     .td-tab.active {

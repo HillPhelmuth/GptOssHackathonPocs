@@ -7,6 +7,8 @@ using NetTopologySuite.Features;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.Index.Strtree;
 using NetTopologySuite.IO.Esri;
+using Azure.Storage.Blobs;
+using Microsoft.Extensions.Configuration;
 
 namespace GptOssHackathonPocs.Core.Models.Enrichment;
 
@@ -14,9 +16,18 @@ public class TigerAdminResolver : IAdminResolver
 {
     private readonly STRtree<(Geometry geom, string fips)> _idx = new();
     private const string ShapeFilePath = @"C:\Users\adamh\Downloads\tl_2024_us_county\tl_2024_us_county.shp";
-    public TigerAdminResolver()  // county or tract file
+    public TigerAdminResolver(IConfiguration config)  // county or tract file
     {
-        foreach (var feature in Shapefile.ReadAllFeatures(ShapeFilePath))
+        var blobClient = new BlobServiceClient(config["StorageConnection:blobConnectionString"]);
+#if DEBUG
+        var readAllFeatures = Shapefile.ReadAllFeatures(ShapeFilePath);
+#else
+var container = blobClient.GetBlobContainerClient("datafiles");
+        var shapeFileStream = container.GetBlobClient("tl_2024_us_county.shp").DownloadContent().Value.Content.ToStream();
+        var dbxFileStream = container.GetBlobClient("tl_2024_us_county.dbf").DownloadContent().Value.Content.ToStream();
+        var readAllFeatures = Shapefile.ReadAllFeatures(shapeFileStream, dbxFileStream);
+#endif
+        foreach (var feature in readAllFeatures)
         {
             var geom = feature.Geometry;               // NTS Geometry
             var attrs = feature.Attributes;      

@@ -1,12 +1,22 @@
 ﻿@page "/"
 
 <PageTitle>Home</PageTitle>
-<button class="btn btn-primary" @onclick="@(() => _toggleView = !_toggleView)">Switch</button>
-@if (!_toggleView)
+<div style="height:100vh;width100vw">
+    <div style="display:flex;justify-content:center;flex-direction:column">
+
+        <div>
+            <a href="copilot">Disaster Triage Copilot</a>
+        </div>
+        <div>
+            <a href="narrativezoo">Narrative Zoo</a>
+        </div>
+    </div>
+</div>
+@* @if (!_toggleView)
 {
     <Copilot></Copilot>
 }
 else
 {
     <NarrativeZooPage></NarrativeZooPage>
-}
+} *@

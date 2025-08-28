@@ -1,8 +1,10 @@
+using GptOssHackathonPocs;
 using GptOssHackathonPocs.Components;
 using GptOssHackathonPocs.Core;
 using GptOssHackathonPocs.Core.Models.Enrichment;
 using GptOssHackathonPocs.Core.Services;
 using GptOssHackathonPocs.Narrative.Core;
+using Microsoft.Extensions.Azure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,8 +24,8 @@ builder.Services.AddSingleton<IIncidentFeed, NhcStormsFeed>();
 builder.Services.AddSingleton<IIncidentFeed, FirmsActiveFiresFeed>();
 builder.Services.AddSingleton<IncidentAggregator>();
 builder.Services.AddTriageEnrichment();
-builder.Services.AddHttpClient<WorldPopPopulationIndex2>();
-builder.Services.AddSingleton(await EarthEngineRestClient.CreateAsync("openaiosshackathonEarth", @"C:\Users\adamh\source\repos\GptOssHackathonPocs\GptOssHackathonPocs.Core\searchwithsemantickernel-a3b6f34079f4.json"));
+builder.Services.AddHttpClient<WorldPopPopulationIndex>();
+//builder.Services.AddSingleton(await EarthEngineRestClient.CreateAsync("openaiosshackathonEarth", @"C:\Users\adamh\source\repos\GptOssHackathonPocs\GptOssHackathonPocs.Core\searchwithsemantickernel-a3b6f34079f4.json"));
 builder.Services.AddSingleton<IPopulationIndex, WorldPopPopulationIndex>();
 // Narrative services
 builder.Services.AddSingleton<WorldState>();
@@ -42,6 +44,11 @@ builder.Services.AddMemoryCache(o =>
 {
     // We'll use "1 unit per cached geometry", so this is a rough max entry count.
     o.SizeLimit = 1000; // tweak as you like
+});
+builder.Services.AddAzureClients(clientBuilder =>
+{
+    AzureClientFactoryBuilderExtensions.AddBlobServiceClient(clientBuilder, builder.Configuration["StorageConnection:blobServiceUri"]!).WithName("StorageConnection");
+    
 });
 
 var app = builder.Build();
