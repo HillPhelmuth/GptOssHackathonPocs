@@ -48,31 +48,35 @@ public class AiAgentOrchestration(ILoggerFactory loggerFactory, IConfiguration c
 
     public async Task<ActionPlan?> PlanAsync(IEnumerable<IncidentCard> cards, CancellationToken ct = default)
     {
-        var settings = new OpenAIPromptExecutionSettings()
-            { ReasoningEffort = "high", ResponseFormat = typeof(ActionPlan), ChatSystemPrompt = SystemPrompt};
-        var kernelArgs = new KernelArguments(settings) { ["cards"] = string.Join("\n---\n", cards.Select(x => x.ToMarkdown()))};
+        //var settings = new OpenAIPromptExecutionSettings()
+        //    { ReasoningEffort = "high", ResponseFormat = typeof(ActionPlan), ChatSystemPrompt = SystemPrompt};
+        //var kernelArgs = new KernelArguments(settings) { ["cards"] = string.Join("\n---\n", cards.Select(x => x.ToMarkdown()))};
         var kernel = CreateKernel();
-        var result = await kernel.InvokePromptAsync<string>(UserPrompt, kernelArgs, cancellationToken: ct);
+        //var result = await kernel.InvokePromptAsync<string>(UserPrompt, kernelArgs, cancellationToken: ct);
+        var actionPlan = new ActionPlan([]);
+       
         try
         {
-            return JsonSerializer.Deserialize<ActionPlan>(result);
+            var tasks = cards.Select(card => GenerateActionItemAsync(card, ct)).ToList();
+            actionPlan.Actions = (await Task.WhenAll(tasks)).Where(x => x is not null).ToList()!;
+            return actionPlan;
         }
         catch
         {
-            _logger.LogError("Failed to deserialize ActionPlan from AI response: {Response}", result);
+            _logger.LogError("Failed to deserialize ActionPlan from AI response: {Response}", actionPlan);
             return null;
         }
     }
     public async Task<ActionItem?> GenerateActionItemAsync(IncidentCard card, CancellationToken ct = default)
     {
         var settings = new OpenAIPromptExecutionSettings()
-            { ReasoningEffort = "high", ResponseFormat = typeof(ActionItem), ChatSystemPrompt = 
+            { ReasoningEffort = "high", ResponseFormat = typeof(ActionItem), ChatSystemPrompt =
                 """
-                  You are an expert emergency response coordinator.
-                  Given the incident card, create a single ActionItem with rationale, tools, priority, audience, and optional parameters.
+                  You are an expert emergency response coordinator. Provided with incident data, think carefully about the data and how it should inform your action.
+                  Create a single, complete and well considered ActionItem based on the incident.
                   Follow the JSON schema strictly.
                 """
-            };
+        };
         var kernelArgs = new KernelArguments(settings) { ["cards"] = card.ToMarkdown() };
         var kernel = CreateKernel();
         var result = await kernel.InvokePromptAsync<string>(UserPrompt, kernelArgs, cancellationToken: ct);

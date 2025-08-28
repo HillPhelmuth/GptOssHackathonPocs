@@ -84,27 +84,27 @@ public sealed record ActionItem
 
     [JsonPropertyName("incident_id")]
     [Description("Identifier of the incident this action item is associated with.")]
-    public string IncidentId { get; init; }
+    public string IncidentId { get; set; }
 
     [JsonPropertyName("title")]
     [Description("Short, human-readable title describing the action to take.")]
-    public string Title { get; init; }
+    public string Title { get; set; }
 
     [JsonPropertyName("rationale")]
     [Description("Explanation of why this action is recommended, optionally citing evidence labels.")]
-    public string Rationale { get; init; }
+    public string Rationale { get; set; }
 
     [JsonPropertyName("evidence_labels")]
     [Description("Labels referencing evidence items that support this action.")]
-    public string[] EvidenceLabels { get; init; }
+    public string[] EvidenceLabels { get; set; }
 
     [JsonPropertyName("required_tools")]
-    [Description("List of tool identifiers required to execute this action.")]
-    public string[] RequiredTools { get; init; }
+    [Description("List of tool identifiers required to execute this action. options are Slack/Teams message, SMS alerts, emails, WEA public alert, Field op radio dispatch ")]
+    public string[] RequiredTools { get; set; }
 
     [JsonPropertyName("priority")]
     [Description("Action priority. Expected values: urgent, high, normal, or low.")]
-    public string Priority { get; init; }
+    public string Priority { get; set; }
     [JsonPropertyName("severity_level")]
     [Description("Numerical severity level from 1 (lowest) to 10 (highest) indicating the Severity of the incident based on a combination of the event severity and the population affected.")]
     public int SeverityLevel { get; set; }
@@ -113,14 +113,14 @@ public sealed record ActionItem
     public int UrgencyLevel { get; set; }
     [JsonPropertyName("audience")]
     [Description("Intended audience for the action. Expected values: ops, public, or ems.")]
-    public string Audience { get; init; }
+    public string Audience { get; set; }
     [JsonPropertyName("instructions")]
     [Description("Detailed, human-readable instructions for executing the action.")]
     public string Instructions { get; set; }
 
     [JsonPropertyName("parameters")]
     [Description("Optional key/value parameters consumed by the required tools for execution.")]
-    public Dictionary<string, string>? Parameters { get; init; }
+    public Dictionary<string, string>? Parameters { get; set; }
 
     public string ToMarkdown()
     {
@@ -161,8 +161,7 @@ public sealed record ActionItem
 
 [Description("A collection of action items produced for one or more incidents.")]
 public sealed record ActionPlan(
-    [property: JsonPropertyName("actions"), Description("The set of action items that comprise this plan.")]
-    ActionItem[] Actions
+    ActionItem[] actions
 )
 {
     [Description("Renders the action plan into a human-readable Markdown string.")]
@@ -177,4 +176,7 @@ public sealed record ActionPlan(
         }
         return sb.ToString();
     }
+
+    [JsonPropertyName("actions"), Description("The set of action items that comprise this plan.")]
+    public IEnumerable<ActionItem> Actions { get; set; } = actions;
 }
