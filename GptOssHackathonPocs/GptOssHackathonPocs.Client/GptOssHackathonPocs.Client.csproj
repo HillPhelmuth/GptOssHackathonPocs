@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
+    <StaticWebAssetProjectMode>Default</StaticWebAssetProjectMode>
+    <UserSecretsId>ee060d1d-c3d7-4b1a-9251-c65a8e8c0156</UserSecretsId>
+    <Platforms>AnyCPU;ARM64;x64</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Markdig" Version="0.41.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="9.0.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\AINarrativeSimulator.Components\AINarrativeSimulator.Components.csproj" />
+    <ProjectReference Include="..\..\GptOssHackathonPocs.Core\GptOssHackathonPocs.Core.csproj" />
+  </ItemGroup>
+
+</Project>

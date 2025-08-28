@@ -1,0 +1,44 @@
+@using GptOssHackathonPocs.Core.Models
+
+<div class="card idp-root">
+    <div class="card-body">
+        @if (Incident is null)
+        {
+            <div class="text-muted">Select an incident to view details.</div>
+        }
+        else
+        {
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h5 class="card-title mb-1">@Incident.Title</h5>
+                    <div class="text-muted small">@Incident.Timestamp.UtcDateTime.ToString("u")</div>
+                </div>
+                <span class="badge bg-@SeverityToColor(Incident.Severity)">@Incident.Severity</span>
+            </div>
+            <div class="mt-3">@Incident.Description</div>
+            @if (!string.IsNullOrWhiteSpace(Incident.Link))
+            {
+                <div class="mt-2"><a href="@Incident.Link" target="_blank">Source</a></div>
+            }
+            <hr />
+            <h6>Geographic Impact</h6>
+            <div class="row g-2">
+                <div class="col"><div class="idp-metric">
+                    <div class="small text-muted">Population Exposed</div>
+                    <div class="fs-5 fw-bold">—</div>
+                </div></div>
+                <div class="col"><div class="idp-metric">
+                    <div class="small text-muted">Vulnerability Index</div>
+                    <div class="fs-5 fw-bold">—</div>
+                </div></div>
+            </div>
+            <h6 class="mt-3">Critical Infrastructure at Risk</h6>
+            <div class="d-flex flex-wrap gap-2">
+                @foreach (var tag in CriticalFacilities)
+                {
+                    <span class="badge rounded-pill text-bg-light border">@tag</span>
+                }
+            </div>
+        }
+    </div>
+</div>

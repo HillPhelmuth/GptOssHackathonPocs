@@ -1,0 +1,39 @@
+﻿@using GptOssHackathonPocs.Core.Models
+@using GptOssHackathonPocs.Core.Services
+
+<div class="td-container">
+    <div class="td-row">
+        <div class="td-main">
+            <div class="td-tabs" role="tablist">
+                <button class="@ActiveTabClass(Tab.Map)" @onclick="() => SetTab(Tab.Map)">Incident Map</button>
+                <button class="@ActiveTabClass(Tab.Feeds)" @onclick="() => SetTab(Tab.Feeds)">Data Feeds</button>
+                <button class="@ActiveTabClass(Tab.Comm)" @onclick="() => SetTab(Tab.Comm)">Communications</button>
+            </div>
+            <div class="td-tabpanes">
+                @switch (_activeTab)
+                {
+                    case Tab.Map:
+                        <div class="td-pane">
+                            <IncidentMap Incidents="@_incidents" />
+                            <div class="td-block-gap"></div>
+                            <ActionQueue Items="@_queue" OnStatusChanged="OnActionStatusChanged" />
+                        </div>
+                        break;
+                    case Tab.Feeds:
+                        <div class="td-pane">
+                            <DataFeedsList />
+                        </div>
+                        break;
+                    case Tab.Comm:
+                        <div class="td-pane">
+                            <CommunicationsHub OnChannelClicked="OnChannel" OnSendQuickMessage="OnQuickMessage" />
+                        </div>
+                        break;
+                }
+            </div>
+        </div>
+        <div class="td-side">
+            <IncidentDetailsPanel Incident="@_selected" CriticalFacilities="@_critical" />
+        </div>
+    </div>
+</div>

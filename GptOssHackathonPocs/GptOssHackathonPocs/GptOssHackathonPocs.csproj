@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>a8817943-3284-41f0-a726-236237f1b215</UserSecretsId>
+    <Platforms>AnyCPU;ARM64;x64</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Remove="Components\Pages\_Host.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GptOssHackathonPocs.Client\GptOssHackathonPocs.Client.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.8" />
+  </ItemGroup>
+
+</Project>

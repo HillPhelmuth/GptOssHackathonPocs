@@ -1,0 +1,27 @@
+<div class="card comm-root">
+    <div class="card-header bg-white">
+        <strong>Communication Hub</strong>
+        <div class="text-muted small">Multi-channel dispatch and stakeholder updates</div>
+    </div>
+    <div class="card-body">
+        <h6>Active Channels</h6>
+        <div class="row g-2">
+            @foreach (var ch in Channels)
+            {
+                <div class="col-6">
+                    <button class="btn btn-outline-secondary comm-channel" @onclick="() => OnChannelClicked.InvokeAsync(ch)">
+                        <div class="fw-semibold">@ch.Name</div>
+                        <div class="small text-muted">@ch.Description</div>
+                    </button>
+                </div>
+            }
+        </div>
+        <h6 class="mt-3">Quick Messages</h6>
+        <div class="d-grid gap-2">
+            @foreach (var m in QuickMessages)
+            {
+                <button class="btn btn-light border comm-quick" @onclick="() => OnSendQuickMessage.InvokeAsync(m)">@m</button>
+            }
+        </div>
+    </div>
+</div>

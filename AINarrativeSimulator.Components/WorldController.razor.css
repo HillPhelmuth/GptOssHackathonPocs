@@ -1,0 +1,52 @@
+/* Panel container */
+.panel.world-controller { background:#111827; border:1px solid #374151; border-radius:8px; color:#e5e7eb; }
+.panel.world-controller .panel-header { padding:1rem; border-bottom:1px solid #374151; }
+.panel.world-controller .panel-title { display:flex; align-items:center; gap:.5rem; }
+.panel.world-controller .panel-title h3 { margin:0; font-size:1.125rem; font-weight:600; }
+.panel.world-controller .title-icon { width:20px; height:20px; border-radius:6px; background:linear-gradient(90deg,#06b6d4,#2563eb); }
+
+.panel.world-controller .controls { display:flex; gap:.5rem; margin-top:.5rem; }
+.panel.world-controller .btn { display:inline-flex; align-items:center; gap:.5rem; padding:.5rem 1rem; border-radius:.5rem; border:1px solid transparent; cursor:pointer; font-weight:500; }
+.panel.world-controller .btn-success { background:#16a34a; color:#fff; }
+.panel.world-controller .btn-danger { background:#dc2626; color:#fff; }
+.panel.world-controller .btn-secondary { background:#4b5563; color:#fff; }
+.panel.world-controller .btn-accent { background:#7c3aed; color:#fff; }
+.panel.world-controller .btn-warn { background:#ea580c; color:#fff; }
+.panel.world-controller .btn:disabled { background:#374151; color:#6b7280; cursor:not-allowed; }
+.panel.world-controller .mt { margin-top:.5rem; }
+
+.panel.world-controller .state-bar { display:flex; align-items:center; gap:1rem; color:#9ca3af; font-size:.875rem; margin-top:.75rem; }
+.panel.world-controller .state { display:flex; align-items:center; gap:.5rem; }
+.panel.world-controller .state-dot { width:8px; height:8px; border-radius:9999px; display:inline-block; }
+.panel.world-controller .state-dot.on { background:#10b981; }
+.panel.world-controller .state-dot.off { background:#ef4444; }
+.panel.world-controller .state-icon { width:12px; height:12px; background:#4b5563; border-radius:4px; display:inline-block; }
+
+.panel.world-controller .tabs { display:flex; border-bottom:1px solid #374151; }
+.panel.world-controller .tab { padding:.5rem 1rem; color:#9ca3af; background:none; border:none; cursor:pointer; }
+.panel.world-controller .tab.active { color:#22d3ee; border-bottom:2px solid #22d3ee; }
+
+.panel.world-controller .content { padding:1rem; max-height:20rem; overflow-y:auto; }
+.panel.world-controller .stack { display:flex; flex-direction:column; gap:1rem; }
+.panel.world-controller .stack-sm { display:flex; flex-direction:column; gap:.5rem; }
+.panel.world-controller .list-vert { display:grid; grid-auto-rows:min-content; gap:.5rem; }
+.panel.world-controller .list-vert-sm { display:grid; grid-auto-rows:min-content; gap:.375rem; }
+
+.panel.world-controller h4 { margin:0 0 .5rem 0; font-size:.875rem; color:#fff; font-weight:600; }
+.panel.world-controller .muted { color:#9ca3af; }
+.panel.world-controller .small { font-size:.75rem; }
+.panel.world-controller .text-input { width:100%; padding:.75rem; background:#1f2937; border:1px solid #4b5563; border-radius:.5rem; color:#fff; }
+.panel.world-controller .textarea { min-height:5rem; resize:vertical; }
+
+.panel.world-controller .pill { padding:.5rem; border-radius:.5rem; font-size:.875rem; }
+.panel.world-controller .pill-info { background:rgba(59,130,246,.1); color:#93c5fd; border:1px solid rgba(59,130,246,.2); }
+.panel.world-controller .pill-accent { background:rgba(168,85,247,.1); color:#d8b4fe; border:1px solid rgba(168,85,247,.2); }
+
+.panel.world-controller .locations { display:grid; grid-template-columns:1fr; gap:.5rem; }
+.panel.world-controller .location-card { background:#1f2937; border-radius:.5rem; padding:.75rem; }
+.panel.world-controller .location-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:.25rem; }
+.panel.world-controller .location-head .name { color:#fff; font-weight:600; font-size:.9rem; }
+.panel.world-controller .location-head .count { color:#9ca3af; font-size:.75rem; }
+.panel.world-controller .atmo { color:#6b7280; font-size:.75rem; margin:.25rem 0 .5rem; }
+.panel.world-controller .occupants { display:flex; flex-wrap:wrap; gap:.25rem; }
+.panel.world-controller .occ { font-size:.75rem; background:rgba(34,211,238,.15); color:#67e8f9; padding:.25rem .5rem; border-radius:.375rem; }

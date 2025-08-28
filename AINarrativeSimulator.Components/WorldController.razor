@@ -1,0 +1,120 @@
+@using AINarrativeSimulator.Components.Models
+@namespace AINarrativeSimulator.Components
+
+
+<div class="panel world-controller">
+    <div class="panel-header">
+        <div class="panel-title">
+            <div class="title-icon"></div>
+            <h3>World Controller</h3>
+        </div>
+        <div class="controls">
+            <button class="btn @(IsRunning ? "btn-danger" : "btn-success")" @onclick="ToggleRunAsync">
+                <span>@(IsRunning ? "Pause" : "Start")</span>
+            </button>
+            <button class="btn btn-secondary" @onclick="ResetAsync">
+                <span>Reset</span>
+            </button>
+        </div>
+        <div class="state-bar">
+            <div class="state">
+                <span class="state-dot @(IsRunning ? "on" : "off")"></span>
+                <span>Simulation @(IsRunning ? "Running" : "Paused")</span>
+            </div>
+            <div class="state"><span class="state-icon"></span><span>@WorldState.CurrentTime</span></div>
+            <div class="state"><span class="state-icon"></span><span>@WorldState.Weather</span></div>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab @(activeTab == "inject" ? "active" : null)" @onclick="ShowInjectTab">
+            <span>Inject</span>
+        </button>
+        <button class="tab @(activeTab == "world" ? "active" : null)" @onclick="ShowWorldTab">
+            <span>World State</span>
+        </button>
+    </div>
+
+    <div class="content">
+        @if (activeTab == "inject")
+        {
+            <div class="stack">
+                <div>
+                    <h4>Inject Rumor</h4>
+                    <div class="stack-sm">
+                        <div>
+                            <textarea class="text-input textarea" placeholder="Enter a rumor to spread through the town..." @bind="rumorText" />
+                            <button class="btn btn-accent mt" disabled="@(string.IsNullOrWhiteSpace(rumorText))" @onclick="HandleInjectRumorAsync">Spread Rumor</button>
+                        </div>
+                        <div>
+                            <p class="muted small">Quick presets:</p>
+                            <div class="list-vert">
+                                @foreach (var r in presetRumors)
+                                {
+                                    <button class="list-item" @onclick="@(() => QuickRumorAsync(r))">@r</button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h4>Inject Event</h4>
+                    <div class="stack-sm">
+                        <div>
+                            <textarea class="text-input textarea" placeholder="Enter a world event to trigger..." @bind="eventText" />
+                            <button class="btn btn-warn mt" disabled="@(string.IsNullOrWhiteSpace(eventText))" @onclick="HandleInjectEventAsync">Trigger Event</button>
+                        </div>
+                        <div>
+                            <p class="muted small">Quick presets:</p>
+                            <div class="list-vert">
+                                @foreach (var e in presetEvents)
+                                {
+                                    <button class="list-item" @onclick="@(() => QuickEventAsync(e))">@e</button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="stack">
+                <div>
+                    <h4>Current Events</h4>
+                    <div class="list-vert-sm">
+                        @foreach (var ev in WorldState.GlobalEvents)
+                        {
+                            <div class="pill pill-info">@ev</div>
+                        }
+                    </div>
+                </div>
+                <div>
+                    <h4>Active Rumors</h4>
+                    <div class="list-vert-sm">
+                        @foreach (var r in WorldState.Rumors)
+                        {
+                            <div class="pill pill-accent">@r</div>
+                        }
+                    </div>
+                </div>
+                <div>
+                    <h4>Locations</h4>
+                    <div class="locations">
+                        @foreach (var location in WorldState.Locations)
+                        {
+                            <div class="location-card">
+                                <div class="location-head">
+                                    <span class="name">@location.Key.ToString()</span>
+                                    <span class="count">@location.Value</span>
+                                </div>
+                                
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

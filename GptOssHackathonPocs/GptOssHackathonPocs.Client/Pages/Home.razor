@@ -1,0 +1,12 @@
+﻿@page "/"
+
+<PageTitle>Home</PageTitle>
+<button class="btn btn-primary" @onclick="@(() => _toggleView = !_toggleView)">Switch</button>
+@if (!_toggleView)
+{
+    <Copilot></Copilot>
+}
+else
+{
+    <NarrativeZooPage></NarrativeZooPage>
+}

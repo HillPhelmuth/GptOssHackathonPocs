@@ -1,0 +1,52 @@
+@using AINarrativeSimulator.Components.Models
+@using System.Linq
+@namespace AINarrativeSimulator.Components
+
+@* Parameters *@
+
+<div class="panel event-feed">
+    <div class="panel-header">
+        <div class="panel-title">
+            <span class="status-icon"></span>
+            <h3>Live Event Feed</h3>
+            <div class="live-indicator">
+                <span class="dot"></span>
+                <span>Live</span>
+            </div>
+        </div>
+        <div class="count">@Actions.Count() events</div>
+    </div>
+
+    <div @ref="_feedDiv" class="feed-scroll">
+        @if (!Actions.Any())
+        {
+            <div class="empty">
+                <div class="empty-icon"></div>
+                <p>The simulation is starting up...</p>
+                <p class="hint">Agents are beginning to interact</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var action in _actionsMarkdown)
+            {
+                <div class="action-card @GetActionTypeClass(action.Item1)">
+                    <div class="action-icon"></div>
+
+                    <div class="action-body">
+                        <div class="action-head">
+                            <div class="meta">
+                                @action.Item2
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+   
+   
+}

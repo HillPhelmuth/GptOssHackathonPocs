@@ -1,0 +1,173 @@
+@using GptOssHackathonPocs.Narrative.Core.Models
+@namespace AINarrativeSimulator.Components
+
+
+<div class="panel agent-inspector @(Class)">
+    <div class="panel-header">
+        <div class="panel-title">
+            <div class="title-icon"></div>
+            <h3>Agent Inspector</h3>
+        </div>
+    </div>
+
+    <div class="inspector">
+        <div class="agent-list">
+            <div class="agent-list-head">
+                <h4>Agents (@Agents.Count())</h4>
+            </div>
+            <div class="agent-list-scroll">
+                @foreach (var agent in Agents)
+                {
+                    var isSel = SelectedAgentId == agent.AgentId;
+                    <div class="agent-item @(isSel ? "selected" : null)"
+                         @onclick="() => SelectAgentAsync(agent.AgentId)">
+                        <div class="agent-item-head">
+                            <div class="id">@agent.AgentId</div>
+                            <div class="profession">@agent.StaticTraits.Profession</div>
+                            <div class="mood-badge @GetMoodBadge(agent.DynamicState.CurrentMood)">@agent.DynamicState.CurrentMood</div>
+                        </div>
+                        <div class="agent-item-foot">
+                            <span class="loc-dot"></span>
+                            <span class="loc-text">@agent.DynamicState.PhysicalLocation</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="agent-details">
+            @if (Current is null)
+            {
+                <div class="empty">
+                    <div class="empty-icon"></div>
+                    <p>Select an agent to inspect their state</p>
+                    <p class="hint">Click on any agent from the list</p>
+                </div>
+            }
+            else
+            {
+                <div class="agent-header">
+                    <div class="summary">
+                        <h3 class="name">@Current.AgentId</h3>
+                        <p class="subtitle">@Current.StaticTraits.Profession</p>
+                    </div>
+                    <div class="mood-badge @GetMoodBadge(Current.DynamicState.CurrentMood)">@Current.DynamicState.CurrentMood</div>
+                </div>
+
+                <div class="tabs">
+                    @foreach (var tab in new[]{"overview","relationships","memories","goals"})
+                    {
+                        var isActive = _activeTab == tab;
+                        <button class="tab @(isActive ? "active" : null)"
+                                @onclick="(() => _activeTab = tab)">
+                            <span>@tab</span>
+                        </button>
+                    }
+                </div>
+
+                <div class="tab-content">
+                    @if (_activeTab == "overview")
+                    {
+                        <div class="section">
+                            <div>
+                                <h4>Personality</h4>
+                                <div class="chips">
+                                    @foreach (var t in Current.StaticTraits.Personality)
+                                    {
+                                        <span class="chip">@t</span>
+                                    }
+                                </div>
+                            </div>
+                            <div>
+                                <h4>Core Values</h4>
+                                <div class="chips">
+                                    @foreach (var v in Current.StaticTraits.CoreValues)
+                                    {
+                                        <span class="chip">@v</span>
+                                    }
+                                </div>
+                            </div>
+                            <div>
+                                <h4>Current Status</h4>
+                                <div class="status-box">
+                                    <div class="status-line">Mood: <span class="value">@Current.DynamicState.CurrentMood</span></div>
+                                    <div class="status-line">Location: <span class="value">@Current.DynamicState.PhysicalLocation</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else if (_activeTab == "relationships")
+                    {
+                        <div class="section">
+                            @foreach (var rel in Current.KnowledgeMemory.Relationships)
+                            {
+                                <div class="rel-card">
+                                    <div class="rel-head">
+                                        <div class="name">@rel.Name</div>
+                                        <div class="trust @TrustText(rel.Details.Trust / 10.0)">Trust: @((rel.Details.Trust/10.0).ToString("0.0"))</div>
+                                    </div>
+                                    <p class="rel-summary">Type: @rel.Details.Type</p>
+                                    @if (!string.IsNullOrWhiteSpace(rel.Details.Notes))
+                                    {
+                                        <p class="rel-meta">Notes: @rel.Details.Notes</p>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                    else if (_activeTab == "memories")
+                    {
+                        <div class="section">
+                            @foreach (var m in Current.KnowledgeMemory.KeyMemories)
+                            {
+                                <div class="mem-card">
+                                    <div class="mem-head">
+                                        <div class="title">Memory</div>
+                                    </div>
+                                    <p class="mem-detail">@m</p>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else if (_activeTab == "goals")
+                    {
+                        <div class="section">
+                            <div>
+                                <h4>Short-term Goals</h4>
+                                <div class="goals-list">
+                                    @if (Current.DynamicState.ShortTermGoals is { Count: > 0 })
+                                    {
+                                        @foreach (var g in Current.DynamicState.ShortTermGoals)
+                                        {
+                                            <div>- @g</div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <div>No short-term goals provided.</div>
+                                    }
+                                </div>
+                            </div>
+                            <div>
+                                <h4>Long-term Goals</h4>
+                                <div class="goals-list">
+                                    @if (Current.DynamicState.LongTermGoals is { Count: > 0 })
+                                    {
+                                        @foreach (var g in Current.DynamicState.LongTermGoals)
+                                        {
+                                            <div>- @g</div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <div>No long-term goals provided.</div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

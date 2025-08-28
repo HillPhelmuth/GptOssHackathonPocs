@@ -1,0 +1,79 @@
+@using AINarrativeSimulator.Components.Models
+@namespace AINarrativeSimulator.Components
+
+<div class="app-shell">
+    <!-- Header -->
+    <header class="site-header">
+        <div class="container">
+            <div class="header-row">
+                <div class="brand">
+                    <div class="brand-icon"></div>
+                    <div>
+                        <h1 class="brand-title">The Emergent Narrative Simulator</h1>
+                        <p class="brand-subtitle">Digital Terrarium of Pineharbor</p>
+                    </div>
+                </div>
+                <div class="tech-badge">
+                    <span class="spark"></span>
+                    <span>Living World Technology</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container main-content">
+        <div class="main-grid">
+            <!-- Left Column - Event Feed -->
+            <div class="col">
+                <EventFeed Actions="@actions" />
+            </div>
+
+            <!-- Middle Column - Agent Inspector -->
+            <div class="col">
+                <AgentInspector Agents="@agents" SelectedAgentId="@selectedAgentId" SelectedAgentIdChanged="@OnSelectedAgentChanged" />
+            </div>
+
+            <!-- Right Column - World Controller -->
+            <div class="col">
+                <WorldController IsRunning="@isRunning"
+                                 OnStart="@HandleStart"
+                                 OnStop="@HandleStop"
+                                 OnReset="@HandleReset"
+                                 InjectRumor="@HandleInjectRumor"
+                                 
+                                 WorldState="@WorldState" />
+            </div>
+        </div>
+
+        <!-- Description Panel -->
+        <div class="desc-panel">
+            <h2 class="desc-title">
+                <span class="desc-icon"></span>
+                About This Simulation
+            </h2>
+            <div class="desc-grid">
+                <div>
+                    <h3 class="desc-h3">Emergent Narratives</h3>
+                    <p>Watch as @agents.Count autonomous AI agents create their own stories through interactions, without any predetermined script. Each agent has unique personalities, relationships, and hidden knowledge.</p>
+                </div>
+                <div>
+                    <h3 class="desc-h3">Real-time Reasoning</h3>
+                    <p>Every few seconds, each agent perceives their environment and makes decisions based on their personality, goals, and memories. The story unfolds organically through their autonomous choices.</p>
+                </div>
+                <div>
+                    <h3 class="desc-h3">Interactive Catalyst</h3>
+                    <p>As the observer, you can introduce rumors, events, or environmental changes that serve as catalysts for new narrative directions, but you cannot directly control the agents.</p>
+                </div>
+            </div>
+            <div class="desc-highlight">
+                <p>
+                    <strong>Mystery of Pineharbor:</strong> The town harbors secrets about an old mining disaster. Agent Eleanor knows about hidden documents, Dr. Webb has medical records that don't match official reports, and newcomer Beatrice is investigating the cover-up. Will the truth emerge through their interactions?
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Subtle background effect -->
+    <div class="bg-stripe" aria-hidden="true"></div>
+</div>
