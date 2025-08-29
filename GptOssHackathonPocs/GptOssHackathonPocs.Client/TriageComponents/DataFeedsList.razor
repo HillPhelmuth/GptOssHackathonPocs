@@ -1,18 +1,18 @@
-<div class="card">
-    <div class="card-header bg-white">
+<div class="dfl-card">
+    <div class="dfl-card-header">
         <strong>Live Data Feeds</strong>
-        <span class="float-end small text-success">Healthy</span>
+        <span class="dfl-float-end dfl-text-sm dfl-text-success">Healthy</span>
     </div>
-    <div class="list-group list-group-flush">
+    <div class="dfl-list dfl-list-flush">
         @foreach (var f in Feeds)
         {
-            <div class="list-group-item">
-                <div class="d-flex justify-content-between">
+            <div class="dfl-list-item">
+                <div class="dfl-flex dfl-justify-between">
                     <div>
-                        <div class="fw-semibold">@f.Name <span class="badge bg-success ms-2">Active</span></div>
-                        <div class="text-muted small">@f.Url</div>
+                        <div class="dfl-fw-semibold">@f.Name <span class="dfl-badge dfl-badge-success dfl-ms-2">Active</span></div>
+                        <div class="dfl-text-muted dfl-text-sm">@f.Url</div>
                     </div>
-                    <div class="text-muted small text-end">
+                    <div class="dfl-text-muted dfl-text-sm dfl-text-end">
                         <div>Poll: @f.PollInterval</div>
                         <div>Type: @f.Type</div>
                     </div>
@@ -20,5 +20,5 @@
             </div>
         }
     </div>
-    <div class="card-footer small text-muted">Real-time monitoring of authoritative hazard feeds including NWS, USGS, NHC, and AirNow</div>
+    <div class="dfl-card-footer dfl-text-sm dfl-text-muted">Real-time monitoring of authoritative hazard feeds including NWS, USGS, NHC, and AirNow</div>
 </div>

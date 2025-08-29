@@ -31,12 +31,12 @@ namespace GptOssHackathonPocs.Core.Models.Enrichment;
 public sealed class EarthEngineRestClient : IDisposable
 {
     private static readonly Uri BaseUri = new("https://earthengine.googleapis.com/");
-    private static readonly string[] Scopes = new[]
-    {
+    private static readonly string[] Scopes =
+    [
         // Either of these works; earthengine.readonly if you don't need to write assets etc.
         "https://www.googleapis.com/auth/earthengine",
         "https://www.googleapis.com/auth/cloud-platform"
-    };
+    ];
 
     private readonly string _projectPath; // "projects/{projectId}"
     private readonly GoogleCredential _credential;

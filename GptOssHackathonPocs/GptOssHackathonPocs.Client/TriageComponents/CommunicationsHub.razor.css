@@ -1,3 +1,27 @@
-.comm-root{}
+/* Card */
+.comm-card{background:#fff;border:1px solid #dee2e6;border-radius:.5rem}
+.comm-card-header{padding:.5rem .75rem;border-bottom:1px solid #dee2e6;border-top-left-radius:.5rem;border-top-right-radius:.5rem}
+.comm-card-body{padding:.75rem}
+
+/* Typography */
+.comm-text-sm{font-size:.875rem}
+.comm-text-muted{color:#6c757d}
+.comm-fw-semibold{font-weight:600}
+
+/* Grid */
+.comm-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.comm-col-6{grid-column:auto}
+.comm-gap-2{gap:.5rem}
+.mt-3{margin-top:1rem}
+.comm-grid-block{display:grid}
+
+/* Buttons */
+.comm-btn{display:inline-block;padding:.375rem .75rem;border-radius:.375rem;border:1px solid transparent;background:#0d6efd;color:#fff;cursor:pointer;text-align:left}
+.comm-btn:hover{filter:brightness(1.05)}
+.comm-btn-outline{background:transparent;color:#6c757d;border-color:#6c757d}
+.comm-btn-outline:hover{background:#f8f9fa}
+.comm-btn-light{background:#f8f9fa;color:#212529;border-color:#dee2e6}
+.comm-border{border:1px solid #dee2e6}
+
 .comm-channel{width:100%;text-align:left}
 .comm-quick{text-align:left}

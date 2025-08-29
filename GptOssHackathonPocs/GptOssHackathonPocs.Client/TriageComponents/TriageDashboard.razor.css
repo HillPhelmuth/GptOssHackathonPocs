@@ -1,10 +1,10 @@
 .td-container {
-    padding: 8px
+    padding: 0px
 }
 
 .td-row {
     display: grid;
-    grid-template-columns: 60% 40%;
+    grid-template-columns: 50% 50%;
     gap: 16px
 }
 
@@ -19,10 +19,25 @@
 
 .td-tabs {
     display: flex;
+    justify-content: center;
     gap: 8px;
     border-bottom: 1px solid #e2e8f0
 }
-
+.td-btn {
+    border-radius: 6px 6px 6px 6px;
+    color: darkblue;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 85%;
+}
+.td-home {
+    border-radius: 6px 6px 6px 6px;
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 85%;
+    background-color:darkblue
+}
 .td-tab {
     appearance: none;
     border: none;
@@ -35,7 +50,8 @@
     font-size: 85%;
 }
 
-    .td-tab.active {
+    .td-tab.active,
+    .td-tab.td-tab-active {
         background: #0b0f1a;
         color: #fff
     }

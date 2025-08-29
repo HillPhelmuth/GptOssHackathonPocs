@@ -23,7 +23,7 @@ public sealed class FirmsActiveFiresFeed : IIncidentFeed
         
         if (string.IsNullOrWhiteSpace(_opt.Dataset))
             throw new ArgumentException("FIRMS Dataset is required (e.g., VIIRS_SNPP_NRT).");
-        if (_opt.DayRange != 1) _opt.DayRange = 1;
+        if (_opt.DayRange != 2) _opt.DayRange = 2;
     }
 
     public async Task<IReadOnlyList<Incident>> FetchAsync(CancellationToken ct = default)
@@ -48,14 +48,15 @@ public sealed class FirmsActiveFiresFeed : IIncidentFeed
         await foreach (var row in csv.GetRecordsAsync<FirmsCsvRow>(ct))
         {
             // optional confidence filter
-            if (_opt.MinConfidence.HasValue && !MeetsConfidence(row.confidence, _opt.MinConfidence.Value))
+            if (_opt.MinConfidence.HasValue && !MeetsConfidence(row.confidence, _opt.MinConfidence.Value) || (row.frp < _opt.MinFrp))
                 continue;
-
+            
             var timestamp = ParseTimestampUtc(row.acq_date, row.acq_time); // FIRMS dates are GMT
             var severity = MapSeverity(row.confidence);
 
             // Build a Feature with properties similar to NWS feed: source, severity, title (+ FIRMS metadata)
             var title = $"Active fire (FIRMS {row.satellite}/{row.instrument}) at {row.latitude:F4}, {row.longitude:F4}";
+            var id = $"{_opt.Dataset}:{(int)row.latitude},{(int)row.longitude}";
             var feature = new
             {
                 type = "Feature",
@@ -67,6 +68,7 @@ public sealed class FirmsActiveFiresFeed : IIncidentFeed
                 properties = new
                 {
                     // standard properties for popup and styling
+                    id,
                     source = nameof(IncidentSource.NasaFirms),
                     severity = severity.ToString().ToLowerInvariant(),
                     title,
@@ -84,7 +86,7 @@ public sealed class FirmsActiveFiresFeed : IIncidentFeed
 
             var geoJson = JsonSerializer.Serialize(feature);
 
-            var id = $"{_opt.Dataset}:{row.acq_date}:{row.acq_time}:{row.latitude:F4},{row.longitude:F4}";
+            
 
             results.Add(new Incident
             {
@@ -99,7 +101,7 @@ public sealed class FirmsActiveFiresFeed : IIncidentFeed
             });
         }
 
-        return results;
+        return results.DistinctBy(x => x.Id).ToList();
     }
 
     private static string BuildAreaApiUrl(FirmsOptions opt)
@@ -189,8 +191,10 @@ public sealed class FirmsOptions
     public string Area { get; set; } = "world";
 
     /// <summary>Number of days to include (e.g., 1 = last 24h)</summary>
-    public int DayRange { get; set; } = 1;
+    public int DayRange { get; set; } = 2;
 
     /// <summary>Optional confidence filter: 'l', 'n', or 'h'</summary>
     public char? MinConfidence { get; init; } = 'h';
+
+    public double MinFrp { get; set; } = 20.0;
 }

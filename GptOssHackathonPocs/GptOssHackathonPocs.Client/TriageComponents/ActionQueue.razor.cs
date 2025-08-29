@@ -13,7 +13,7 @@ public partial class ActionQueue
         int PriorityRank,
         int UrgencyLevel, string FullMarkdown);
 
-    [Parameter] public IReadOnlyList<ActionQueueItem> Items { get; set; } = Array.Empty<ActionQueueItem>();
+    [Parameter] public IReadOnlyList<ActionQueueItem> Items { get; set; } = [];
     [Parameter] public EventCallback<(ActionQueueItem item, string status)> OnStatusChanged { get; set; }
 
     private static string? UrgencyBadge(ActionQueueItem it)
@@ -29,7 +29,7 @@ public partial class ActionQueue
     }
 
     // State for expand/collapse of details per item
-    private readonly HashSet<string> _expanded = new();
+    private readonly HashSet<string> _expanded = [];
     private static string KeyFor(ActionQueueItem it) => $"{it.IncidentId}|{it.Title}";
     private bool IsExpanded(ActionQueueItem it) => _expanded.Contains(KeyFor(it));
     private void ToggleDetails(ActionQueueItem it)

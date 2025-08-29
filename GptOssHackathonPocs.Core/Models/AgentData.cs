@@ -93,7 +93,9 @@ public sealed record ActionItem
     [JsonPropertyName("rationale")]
     [Description("Explanation of why this action is recommended, optionally citing evidence labels.")]
     public string Rationale { get; set; }
-
+    [JsonPropertyName("description")]
+    [Description("Description of the Incident details intended for a broad audience")]
+    public string Description { get; set; }
     [JsonPropertyName("evidence_labels")]
     [Description("Labels referencing evidence items that support this action.")]
     public string[] EvidenceLabels { get; set; }
@@ -115,24 +117,27 @@ public sealed record ActionItem
     [Description("Intended audience for the action. Expected values: ops, public, or ems.")]
     public string Audience { get; set; }
     [JsonPropertyName("instructions")]
-    [Description("Detailed, human-readable instructions for executing the action.")]
+    [Description("Very Detailed, human-readable, step-by-step instructions for executing the action.")]
     public string Instructions { get; set; }
 
     [JsonPropertyName("parameters")]
     [Description("Optional key/value parameters consumed by the required tools for execution.")]
     public Dictionary<string, string>? Parameters { get; set; }
-
+    
     public string ToMarkdown()
     {
         var sb = new StringBuilder();
         // Add Each property with its description if available and value in markdown format
         sb.AppendLine($" **Action for Incident {IncidentId}**");
         sb.AppendLine($"- {LabelWithDesc("Title", nameof(Title))}: {Title}");
+        sb.AppendLine($"- {LabelWithDesc(nameof(Description), nameof(Description))}: {Description}");
         sb.AppendLine($"- {LabelWithDesc("Rationale", nameof(Rationale))}: {Rationale}");
         sb.AppendLine($"- {LabelWithDesc("Evidence Labels", nameof(EvidenceLabels))}: {string.Join(", ", EvidenceLabels)}");
         sb.AppendLine($"- {LabelWithDesc("Required Tools", nameof(RequiredTools))}: {string.Join(", ", RequiredTools)}");
         sb.AppendLine($"- {LabelWithDesc("Priority", nameof(Priority))}: {Priority}");
         sb.AppendLine($"- {LabelWithDesc("Audience", nameof(Audience))}: {Audience}");
+        sb.AppendLine($"- {LabelWithDesc("Severity Level", nameof(SeverityLevel))}: {SeverityLevel}");
+        
         if (Parameters is { Count: > 0 })
         {
             sb.AppendLine($"- {LabelWithDesc("Parameters", nameof(Parameters))}:");
@@ -177,6 +182,6 @@ public sealed record ActionPlan(
         return sb.ToString();
     }
 
-    [JsonPropertyName("actions"), Description("The set of action items that comprise this plan.")]
+    [JsonPropertyName("actionItems"), Description("The set of action items that comprise this plan.")]
     public IEnumerable<ActionItem> Actions { get; set; } = actions;
 }

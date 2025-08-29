@@ -4,5 +4,5 @@ namespace GptOssHackathonPocs.Core.Models.Enrichment;
 
 public interface ISviIndex
 {
-    Task<double> GetSviPercentile(Geometry? g);
+    Task<PopulationSvi> GetSviPercentile(Geometry? g);
 } // 0..1

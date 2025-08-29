@@ -4,18 +4,19 @@
 <div class="td-container">
     <div class="td-row">
         <div class="td-main">
-            <div class="td-tabs" role="tablist" style="position:relative"> 
+            <div class="td-tabs" role="tablist" style="position:relative">
+                <button class="td-btn" style="position:absolute; left:8px; top:4px;" @onclick="@(() => Nav.NavigateTo(""))">Home</button>
                 <button class="@ActiveTabClass(Tab.Map)" @onclick="() => SetTab(Tab.Map)">Incident Map</button>
                 <button class="@ActiveTabClass(Tab.Feeds)" @onclick="() => SetTab(Tab.Feeds)">Data Feeds</button>
                 <button class="@ActiveTabClass(Tab.Comm)" @onclick="() => SetTab(Tab.Comm)">Communications</button>
-                <button class="td-tab active" style="position:absolute; right:8px; top:4px;" @onclick="@(()=> Refresh())">Refresh</button>
+                <button class="td-btn" style="position:absolute; right:8px; top:4px;" @onclick="@(() => Refresh())">Refresh</button>
             </div>
             <div class="td-tabpanes">
                 @switch (_activeTab)
                 {
                     case Tab.Map:
                         <div class="td-pane">
-                            <IncidentMap Incidents="@_incidents" />
+                            <IncidentMap Incidents="@_incidents" IncidentSelected="SelectIncident" />
                             
                         </div>
                         break;
@@ -31,17 +32,25 @@
                         break;
                 }
                 <div class="td-block-gap"></div>
-                <ActionQueue Items="@_queue" OnStatusChanged="OnActionStatusChanged" />
+                @* <ActionQueue Items="@_queue" OnStatusChanged="OnActionStatusChanged" /> *@
+                <select style="max-width:15rem" @onchange="HandleSelectChange">
+                    @foreach(var inc in _incidents ?? [])
+                    {
+                        <option value="@inc.Id">@inc.Title</option>
+                    }
+                </select> 
+                <IncidentDetailsPanel Incident="@_selected" PopulationAffected="@(_selectedCard?.PopulationExposed ?? 0.0)" SviPercentile="@(_selectedCard?.SviPercentile ?? 0.0)"/>
             </div>
         </div>
         <div class="td-side">
-            <IncidentDetailsPanel Incident="@_selected" />
-            <select style="max-width:10rem" @onchange="@((e) => _selected = _incidents.First(x => x.Id == e.Value.ToString()))">
+            @* <IncidentDetailsPanel Incident="@_selected" />
+            <select style="max-width:15rem" @onchange="HandleSelectChange">
                 @foreach(var inc in _incidents ?? [])
                 {
                     <option value="@inc.Id">@inc.Title</option>
                 }
-            </select>
+            </select> *@
+            <ActionQueue Items="@_queue" OnStatusChanged="OnActionStatusChanged" />
         </div>
     </div>
 </div>

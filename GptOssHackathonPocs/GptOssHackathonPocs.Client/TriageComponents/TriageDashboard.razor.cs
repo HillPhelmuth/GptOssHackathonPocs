@@ -14,6 +14,7 @@ public partial class TriageDashboard
     private Tab _activeTab = Tab.Map;
     private IReadOnlyList<Incident>? _incidents;
     private Incident? _selected;
+    private IncidentCard? _selectedCard;
     private string[] _critical = [];
     private List<ActionQueue.ActionQueueItem> _queue = [];
     private string _actionPlanMarkdown;
@@ -24,6 +25,8 @@ public partial class TriageDashboard
     private IncidentCardBuilder CardBuilder { get; set; } = default!;
     [Inject]
     private IncidentAggregator Aggregator { get; set; } = default!;
+    [Inject]
+    private NavigationManager Nav { get; set; } = default!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -44,6 +47,23 @@ public partial class TriageDashboard
         await base.OnAfterRenderAsync(firstRender);
     }
 
+    private void HandleSelectChange(ChangeEventArgs e)
+    {
+        var v = e.Value?.ToString();
+        SelectIncident(v);
+    }
+
+    private void SelectIncident(string? v)
+    {
+        var sel = _incidents?.FirstOrDefault(x => x.Id == v);
+        if (sel is not null)
+        {
+            _selected = sel;
+            _selectedCard = _cards.FirstOrDefault(c => c.IncidentId == sel.Id);
+            StateHasChanged();
+        }
+    }
+
     private async Task Refresh(bool callAi = true)
     {
         _incidents = await Aggregator.FetchAllAsync();
@@ -58,20 +78,26 @@ public partial class TriageDashboard
     }
 
     private string ActiveTabClass(Tab t) => _activeTab == t ? "td-tab active" : "td-tab";
-
+    private List<IncidentCard> _cards = [];
     private async Task GenerateActionPlan()
     {
         if (_incidents is null) return;
         var cardTasks = _incidents.Select(incident => CardBuilder.Build(incident)).ToList();
         var cards = (await Task.WhenAll(cardTasks)).ToList();
+        _cards = cards;
         var token = _cts.Token;
         Console.WriteLine($"Incident Cards: \n\n{JsonSerializer.Serialize(cards, new JsonSerializerOptions() { WriteIndented = true })}");
-        var actionPlan = await Orchestrator.PlanAsync(cards, token);
+        //var actionPlan = await Orchestrator.PlanAsync(cards, token);
+        var actions = new List<ActionItem>();
         _queue.Clear();
-        foreach (var action in actionPlan?.Actions ?? [])
+        await foreach (var action in Orchestrator.PlanAsync(cards, token))
         {
+            if (action is null) continue;
+            actions.Add(action);
             _queue.Add(new ActionQueue.ActionQueueItem(action.IncidentId ?? "", action.Title, action.Instructions, action.SeverityLevel, action.UrgencyLevel, action.ToMarkdown()));
+            InvokeAsync(StateHasChanged);
         }
+        var actionPlan = new ActionPlan(actions.ToArray());
         _actionPlanMarkdown = actionPlan is null ? "### Error\n\nCould not generate action plan." : actionPlan.ToMarkdown();
         StateHasChanged();
     }

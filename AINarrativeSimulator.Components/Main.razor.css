@@ -81,24 +81,63 @@
 
 /* Main */
 .main-content {
-    padding: 1.5rem 1.5rem;
+    padding: .3rem .3rem;
 }
 
+.grid-actions { margin-bottom: .5rem; }
+
 .main-grid {
+    /* Use CSS vars so JS can adjust column widths */
+    --col1: 1fr;
+    --col2: 1fr;
+    --col3: 1fr;
+    --gutter: 6px;
+
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: var(--col1) var(--gutter) var(--col2) var(--gutter) var(--col3);
     gap: 1.5rem;
+    align-items: stretch;
     height: 90vh;
+}
+
+/* When right column is hidden, collapse to two columns layout */
+.main-grid.no-right {
+    grid-template-columns: var(--col1) var(--gutter) var(--col2);
+}
+
+/* On narrow screens keep single column, hide gutters */
+@media (max-width: 1023.98px) {
+    .main-grid,
+    .main-grid.no-right {
+        grid-template-columns: 1fr;
+    }
+
+    .gutter {
+        display: none;
+    }
 }
 
 @media (min-width:1024px) {
     .main-grid {
-        grid-template-columns: repeat(3,1fr);
+        /* grid already defined with 3 columns + 2 gutters */
     }
 }
 
 .col {
     min-height: 0;
+}
+
+/* Draggable gutter */
+.gutter {
+    cursor: col-resize;
+    background: linear-gradient(180deg, rgba(34,211,238,.4), rgba(37,99,235,.4));
+    border-left: 1px solid rgba(34,211,238,.35);
+    border-right: 1px solid rgba(37,99,235,.35);
+    width: var(--gutter);
+}
+
+.gutter:hover {
+    background: linear-gradient(180deg, rgba(34,211,238,.7), rgba(37,99,235,.7));
 }
 
 /* Description */

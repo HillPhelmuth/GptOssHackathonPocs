@@ -1,7 +1,10 @@
 ﻿using AINarrativeSimulator.Components.Models;
+using Blazored.LocalStorage;
 using GptOssHackathonPocs.Narrative.Core;
 using GptOssHackathonPocs.Narrative.Core.Models;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Identity.Client;
+using Microsoft.JSInterop;
 
 namespace AINarrativeSimulator.Components;
 
@@ -18,6 +21,27 @@ public partial class Main
     private bool isRunning;
     private string _rumor = "";
     private CancellationTokenSource _cts = new();
+
+    private ElementReference _grid;
+    [Inject] private IJSRuntime JS { get; set; } = default!;
+    private IJSObjectReference? _module;
+    [Inject]
+    private ILocalStorageService LocalStorage { get; set; } = default!;
+
+    private bool _showWorldController = true;
+
+    private async Task ToggleWorldPanel()
+    {
+        _showWorldController = !_showWorldController;
+        await InvokeAsync(StateHasChanged);
+        if (_module is not null)
+        {
+            // Let DOM update, then re-init resizer in correct mode
+            await Task.Yield();
+            await _module.InvokeVoidAsync("reinitGrid", _grid, !_showWorldController);
+        }
+    }
+
     protected override void OnInitialized()
     {
         WorldState.PropertyChanged += HandleWorldStatePropertyChanged;
@@ -32,23 +56,40 @@ public partial class Main
         //};
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _module = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/AINarrativeSimulator.Components/resizableGrid.js");
+            await _module.InvokeVoidAsync("initResizableGrid", _grid);
+        }
+    }
+
     private void HandleAgentChatMessageWritten(string obj)
     {
         WorldState.AddRecentAction(new WorldAgentAction(){Type = ActionType.Decide, Details = obj, Timestamp = DateTime.Now});
     }
 
-    private void HandleWorldStatePropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    private async void HandleWorldStatePropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        switch (e.PropertyName)
+        try
         {
-            case nameof(WorldState.WorldAgents):
-                agents = WorldState.WorldAgents.Agents;
-                InvokeAsync(StateHasChanged);
-                break;
-            case nameof(WorldState.RecentActions):
-                actions = WorldState.RecentActions;
-                InvokeAsync(StateHasChanged);
-                break;
+            switch (e.PropertyName)
+            {
+                case nameof(WorldState.WorldAgents):
+                    agents = WorldState.WorldAgents.Agents;
+                    await LocalStorage.SetItemAsync($"agents-{DateTime.Now:hh:mm:ss}", WorldState.WorldAgents);
+                    await InvokeAsync(StateHasChanged);
+                    break;
+                case nameof(WorldState.RecentActions):
+                    actions = WorldState.RecentActions;
+                    await InvokeAsync(StateHasChanged);
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error handling WorldState property change: {ex.Message}");
         }
     }
 
@@ -77,9 +118,9 @@ public partial class Main
         StateHasChanged();
     }
 
-    private void HandleInjectRumor(string rumor)
+    private void HandleInjectRumor(String rumor)
     {
-        _rumor = rumor;
+        _rumor += "\nRumor: " + rumor;
         WorldState.Rumors.Add(rumor);
         actions.Add(new WorldAgentAction()
         {
@@ -91,20 +132,19 @@ public partial class Main
         StateHasChanged();
     }
 
-    //private void HandleInjectEvent(string evt)
-    //{
-    //    WorldState.GlobalEvents.Add(evt);
-    //    actions.Add(new WorldAgentAction
-    //    {
-    //        Type = "discover",
-    //        AgentId = "World",
-    //        Content = evt,
-    //        Location = "Pineharbor",
-    //        Visibility = "public",
-    //        Timestamp = DateTime.Now
-    //    });
-    //    StateHasChanged();
-    //}
+    private void HandleInjectEvent(String evt)
+    {
+        _rumor += "\nEvent: " + evt;
+        WorldState.GlobalEvents.Add(evt);
+        actions.Add(new WorldAgentAction
+        {
+            Type = ActionType.Discover,
+            Target = "public",
+            Details = evt,
+            Timestamp = DateTime.Now
+        });
+        StateHasChanged();
+    }
 
     private Task OnSelectedAgentChanged(string id)
     {

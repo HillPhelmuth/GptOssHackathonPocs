@@ -118,7 +118,7 @@ public sealed class NwsGeometryResolver
 
     private static bool TryGetCaseInsensitiveArray(JsonElement obj, string keyLower, out List<JsonElement> values)
     {
-        values = new();
+        values = [];
         foreach (var p in obj.EnumerateObject())
         {
             if (!string.Equals(p.Name, keyLower, StringComparison.OrdinalIgnoreCase)) continue;

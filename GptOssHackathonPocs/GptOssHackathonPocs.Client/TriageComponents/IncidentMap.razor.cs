@@ -10,12 +10,17 @@ public partial class IncidentMap
     private readonly string _mapId = $"map-{Guid.NewGuid():N}";
     private bool _ready;
     private bool _hasRendered;
+    [Inject] private IJSRuntime JS { get; set; } = default!;
+    private DotNetObjectReference<IncidentMap>? _dotNetObject;
+    [Parameter]
+    public EventCallback<string> IncidentSelected { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            await JS.InvokeVoidAsync("triageMap.init", _mapId);
+            _dotNetObject = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("triageMap.init", _mapId, _dotNetObject);
             _ready = true;
             await PushIncidentsAsync();
             _hasRendered = true;
@@ -33,7 +38,17 @@ public partial class IncidentMap
         if (!_ready) return;
         var geo = Incidents?.Where(x => !string.IsNullOrWhiteSpace(x.GeoJson))
             .Select(x => x.GeoJson!)
-            .ToArray() ?? Array.Empty<string>();
+            .ToArray() ?? [];
         await JS.InvokeVoidAsync("triageMap.setIncidents", (object)geo);
+    }
+
+    [JSInvokable]
+    public void OnIncidentSelected(string id)
+    {
+        var incident = Incidents?.FirstOrDefault(i => i.Id == id);
+        if (incident != null)
+        {
+            IncidentSelected.InvokeAsync(incident.Id);
+        }
     }
 }

@@ -1,14 +1,14 @@
 ﻿@using System.ComponentModel
 
-<div class="card aq-root">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+<div class="aq-card aq-root">
+    <div class="aq-card-header aq-flex aq-justify-between aq-align-center">
         <strong>Action Queue - Evidence-Linked Recommendations (gpt-oss-generated)</strong>
-        <span class="small text-muted">@Items.Count actions</span>
+        <span class="aq-text-sm aq-text-muted">@Items.Count actions</span>
     </div>
-    <div class="list-group list-group-flush">
+    <div class="aq-list aq-list-flush">
         @if (Items.Count == 0)
         {
-            <div class="list-group-item"><span class="text-muted">No actions yet.</span></div>
+            <div class="aq-list-item"><span class="aq-text-muted">No actions yet.</span></div>
         }
         else
         {
@@ -16,16 +16,16 @@
             foreach (var it in Items)
             {
                 idx++;
-                <div class="list-group-item">
-                    <div class="d-flex justify-content-between align-items-start">
+                <div class="aq-list-item">
+                    <div class="aq-flex aq-justify-between aq-align-start">
                         <div>
-                            <span class="badge bg-dark me-2">#@idx</span>
-                            <span class="fw-semibold">@it.Title</span>
+                            <span class="aq-badge aq-badge-dark aq-me-2">#@idx</span>
+                            <span class="aq-fw-semibold">@it.Title</span>
                             @if (UrgencyBadge(it) is { } badge)
                             {
-                                <span class="badge bg-danger ms-2">@badge</span>
+                                <span class="aq-badge aq-badge-danger aq-ms-2">@badge</span>
                             }
-                            <div class="text-muted small">@it.Rationale</div>
+                            <div class="aq-text-muted aq-text-sm">@it.Rationale</div>
 
                             @* Floating toggle button to show/hide details *@
                             <div class="aq-details-container">
@@ -55,7 +55,7 @@
                             </div>
                         </div>
                         <div>
-                            <select class="form-select form-select-sm aq-status" @onchange="@((ChangeEventArgs e) => ChangeStatus(it, e))">
+                            <select class="aq-select aq-select-sm aq-status" @onchange="@((ChangeEventArgs e) => ChangeStatus(it, e))">
                                 <option selected>Pending</option>
                                 <option>In Progress</option>
                                 <option>Completed</option>

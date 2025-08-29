@@ -56,8 +56,24 @@ public sealed class NwsAlertsFeed : IIncidentFeed
                 var sourceStr = nameof(IncidentSource.NwsAlert);
                 var severityStr = sev.ToString().ToLowerInvariant();
 
-                geojson =
-                    $"{{\"type\":\"Feature\",\"geometry\":{geomJson},\"properties\":{{\"source\":{JsonSerializer.Serialize(sourceStr)},\"severity\":{JsonSerializer.Serialize(severityStr)},\"title\":{JsonSerializer.Serialize(headline)} }} }}";
+                using var geomDoc = JsonDocument.Parse(geomJson);
+                var geometryElement = geomDoc.RootElement.Clone();
+
+                var feature = new
+                {
+                    type = "Feature",
+                    geometry = geometryElement,
+                    properties = new
+                    {
+                        // standard properties for popup and styling
+                        id,
+                        source = sourceStr,
+                        severity = severityStr,
+                        title = headline
+                    }
+                };
+
+                geojson = JsonSerializer.Serialize(feature);
             }
             
             

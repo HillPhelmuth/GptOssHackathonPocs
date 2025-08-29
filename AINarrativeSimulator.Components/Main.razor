@@ -23,27 +23,37 @@
 
     <!-- Main Content -->
     <main class="container main-content">
-        <div class="main-grid">
+        <div class="grid-actions">
+            <button class="btn btn-secondary" style="position:absolute;right:4px;" @onclick="ToggleWorldPanel">@(_showWorldController ? "Hide World Controller" : "Show World Controller")</button>
+        </div>
+        <div class="main-grid @( _showWorldController ? string.Empty : "no-right")" @ref="_grid">
             <!-- Left Column - Event Feed -->
             <div class="col">
                 <EventFeed Actions="@actions" />
             </div>
+            <!-- Gutter between col 1 and 2 -->
+            <div class="gutter" data-gutter="1" aria-hidden="true"></div>
 
             <!-- Middle Column - Agent Inspector -->
             <div class="col">
                 <AgentInspector Agents="@agents" SelectedAgentId="@selectedAgentId" SelectedAgentIdChanged="@OnSelectedAgentChanged" />
             </div>
 
-            <!-- Right Column - World Controller -->
-            <div class="col">
-                <WorldController IsRunning="@isRunning"
-                                 OnStart="@HandleStart"
-                                 OnStop="@HandleStop"
-                                 OnReset="@HandleReset"
-                                 InjectRumor="@HandleInjectRumor"
-                                 
-                                 WorldState="@WorldState" />
-            </div>
+            @if (_showWorldController)
+            {
+                <!-- Gutter between col 2 and 3 -->
+                <div class="gutter" data-gutter="2" aria-hidden="true"></div>
+                <!-- Right Column - World Controller -->
+                <div class="col">
+                    <WorldController IsRunning="@isRunning"
+                                     OnStart="@HandleStart"
+                                     OnStop="@HandleStop"
+                                     OnReset="@HandleReset"
+                                     InjectRumor="@HandleInjectRumor"
+                                     InjectEvent="@HandleInjectEvent"
+                                     WorldState="@WorldState" />
+                </div>
+            }
         </div>
 
         <!-- Description Panel -->

@@ -26,10 +26,10 @@ public sealed class SviIndexArcGis : ISviIndex
         _field = field;
     }
 
-    public async Task<double> GetSviPercentile(Geometry? g)
+    public async Task<PopulationSvi> GetSviPercentile(Geometry? g)
         => await GetPercentileAsync(g, CancellationToken.None);
 
-    public async Task<double> GetPercentileAsync(Geometry? g, CancellationToken ct)
+    public async Task<PopulationSvi> GetPercentileAsync(Geometry? g, CancellationToken ct)
     {
         if (g is null || g.IsEmpty) throw new Exception("Geometry is FUCKING null");
 
@@ -44,45 +44,46 @@ public sealed class SviIndexArcGis : ISviIndex
         };
         var geometryJson = JsonSerializer.Serialize(geometryObj);
 
-        // 1) Try server-side stats (avg + max)
-        var stats = new[] {
-            new { statisticType = "avg", onStatisticField = _field, outStatisticFieldName = "avg" },
-            new { statisticType = "max", onStatisticField = _field, outStatisticFieldName = "max" },
-        };
+        // 1) Try server-side stats (avg + max) E_TOTPOP
+        //var stats = new[] {
+        //    new { statisticType = "avg", onStatisticField = "RPL_THEMES", outStatisticFieldName = "avg" },
+        //    new { statisticType = "max", onStatisticField = "RPL_THEMES", outStatisticFieldName = "max" },
+        //    new { statisticType = "tot", onStatisticField = "E_TOTPOP", outStatisticFieldName = "totpop" }// Unsure if this is correct
+        //};
 
-        var qs = new Dictionary<string, string>
-        {
-            ["f"] = "json",
-            ["where"] = "1=1",
-            ["geometryType"] = "esriGeometryEnvelope",
-            ["geometry"] = geometryJson,          // <-- JSON envelope + SR
-            ["inSR"] = "4326",                    // <-- include input SR
-            ["spatialRel"] = "esriSpatialRelIntersects",
-            ["returnGeometry"] = "false",
-            ["outStatistics"] = JsonSerializer.Serialize(stats),
-        };
+        //var qs = new Dictionary<string, string>
+        //{
+        //    ["f"] = "json",
+        //    ["where"] = "1=1",
+        //    ["geometryType"] = "esriGeometryEnvelope",
+        //    ["geometry"] = geometryJson,          // <-- JSON envelope + SR
+        //    ["inSR"] = "4326",                    // <-- include input SR
+        //    ["spatialRel"] = "esriSpatialRelIntersects",
+        //    ["returnGeometry"] = "false",
+        //    ["outStatistics"] = JsonSerializer.Serialize(stats),
+        //};
 
-        var url = $"{_layerUrl}/query?{BuildQuery(qs)}";
-        using var resp = await _http.GetAsync(url, ct);
-        resp.EnsureSuccessStatusCode();
+        //var url = $"{_layerUrl}/query?{BuildQuery(qs)}";
+        //using var resp = await _http.GetAsync(url, ct);
+        //resp.EnsureSuccessStatusCode();
 
-        using var doc = await JsonDocument.ParseAsync(await resp.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
-        if (doc.RootElement.TryGetProperty("features", out var feats) && feats.GetArrayLength() > 0)
-        {
-            var attrs = feats[0].GetProperty("attributes");
-            if (attrs.TryGetProperty("avg", out var avgToken) && avgToken.ValueKind == JsonValueKind.Number)
-            {
-                var percentileAsync = avgToken.GetDouble();
-                if (percentileAsync is >= 0 and <= 1)
-                    return percentileAsync;
-            }
-            if (attrs.TryGetProperty("max", out var maxToken) && maxToken.ValueKind == JsonValueKind.Number)
-            {
-                var percentileAsync = maxToken.GetDouble();
-                if (percentileAsync is >= 0 and <= 1)
-                    return percentileAsync;
-            }
-        }
+        //using var doc = await JsonDocument.ParseAsync(await resp.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
+        //if (doc.RootElement.TryGetProperty("features", out var feats) && feats.GetArrayLength() > 0)
+        //{
+        //    var attrs = feats[0].GetProperty("attributes");
+        //    if (attrs.TryGetProperty("avg", out var avgToken) && avgToken.ValueKind == JsonValueKind.Number)
+        //    {
+        //        var percentileAsync = avgToken.GetDouble();
+        //        if (percentileAsync is >= 0 and <= 1)
+        //            return percentileAsync;
+        //    }
+        //    if (attrs.TryGetProperty("max", out var maxToken) && maxToken.ValueKind == JsonValueKind.Number)
+        //    {
+        //        var percentileAsync = maxToken.GetDouble();
+        //        if (percentileAsync is >= 0 and <= 1)
+        //            return percentileAsync;
+        //    }
+        //}
 
         // Fallback: fetch values and average client-side
         var qs2 = new Dictionary<string, string>
@@ -94,7 +95,7 @@ public sealed class SviIndexArcGis : ISviIndex
             ["inSR"] = "4326",                    // <-- WAS MISSING BEFORE
             ["spatialRel"] = "esriSpatialRelIntersects",
             ["returnGeometry"] = "false",
-            ["outFields"] = _field,               // RPL_THEMES
+            ["outFields"] = "RPL_THEMES,E_TOTPOP",               // RPL_THEMES,E_TOTPOP
             ["resultRecordCount"] = "2000"
         };
         var url2 = $"{_layerUrl}/query?{BuildQuery(qs2)}";
@@ -106,13 +107,17 @@ public sealed class SviIndexArcGis : ISviIndex
         if (!doc2.RootElement.TryGetProperty("features", out var feats2) || feats2.GetArrayLength() == 0)
             throw new Exception($"doc2 is FUCKING missing `features`\n\nsee here\n{doc2.RootElement.ToString()}");
 
-        double sum = 0; int n = 0;
+        double sum = 0; 
+        int n = 0;
+        int pop = 0;
         foreach (var f in feats2.EnumerateArray())
         {
             if (f.TryGetProperty("attributes", out var a) &&
-                a.TryGetProperty(_field, out var v) &&
-                v.ValueKind == JsonValueKind.Number)
+                a.TryGetProperty("RPL_THEMES", out var v) && a.TryGetProperty("E_TOTPOP", out var t) &&
+                v.ValueKind == JsonValueKind.Number && t.ValueKind == JsonValueKind.Number)
             {
+                var p = t.GetInt32();
+                pop += p;
                 var d = v.GetDouble();
                 if (d is < 0 or > 1) continue; // invalid
                 sum += d;
@@ -120,9 +125,12 @@ public sealed class SviIndexArcGis : ISviIndex
             }
         }
         if (n == 0) throw new Exception("No FUCKING valid SVI values found in features.");
-        return n > 0 ? sum / n : 0.5;
+        var sviPercentile = n > 0 ? sum / n : 0.5;
+        var sviPop = pop;
+        return new PopulationSvi(sviPop, sviPercentile);
     }
 
     private static string BuildQuery(Dictionary<string, string> kv)
         => string.Join("&", kv.Select(kvp => $"{Uri.EscapeDataString(kvp.Key)}={Uri.EscapeDataString(kvp.Value)}"));
 }
+public record PopulationSvi(int TotalPopulation, double AverageSviPercentile);

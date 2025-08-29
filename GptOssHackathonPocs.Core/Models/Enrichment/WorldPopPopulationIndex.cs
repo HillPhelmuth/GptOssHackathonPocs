@@ -43,9 +43,9 @@ public sealed class WorldPopPopulationIndex : IPopulationIndex
         this.roundDecimals = roundDecimals;
 
         // ~1m..100m-ish tolerances in degrees (order of magnitude)
-        simplifyTolerancesDeg = new[] { 1e-5, 5e-4};
+        simplifyTolerancesDeg = [1e-5, 5e-4];
         // fallback grid sizes (degrees)
-        tileCellSizesDeg = new[] { 0.5, 0.10 };
+        tileCellSizesDeg = [0.5, 0.10];
 
         _geoWriter = new GeoJsonWriter
         {

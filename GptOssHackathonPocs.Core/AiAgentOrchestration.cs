@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Runtime.CompilerServices;
+using System.Text.Json;
 using GptOssHackathonPocs.Core.Models;
 using GptOssHackathonPocs.Core.Models.Enrichment;
 using GptOssHackathonPocs.Core.Services;
@@ -11,13 +12,15 @@ using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 namespace GptOssHackathonPocs.Core;
 
-public class AiAgentOrchestration(ILoggerFactory loggerFactory, IConfiguration configuration)   
+public class AiAgentOrchestration(ILoggerFactory loggerFactory, IConfiguration configuration)
 {
     private const string SystemPrompt = """
                                         You are the triage planner for an Emergency Operations Center.
                                         Rules:
                                         - Use ONLY provided incident cards and evidence links. Do NOT invent geometry or sources.
+                                        - Think carefully about each incident and how it should inform your corresponding action.
                                         - Return a JSON ActionPlan that passes the provided JSON Schema.
+                                        - There must be exactly one action per incident card.
                                         - If critical data is missing, include a low-priority action titled "Request-Info" with parameters describing the gap.
                                         - Keep actions atomic and executable in <30 minutes.
                                         - Prefer high-need areas (SVI ≥ 0.8) when priorities tie.
@@ -46,31 +49,49 @@ public class AiAgentOrchestration(ILoggerFactory loggerFactory, IConfiguration c
         return kernel;
     }
 
-    public async Task<ActionPlan?> PlanAsync(IEnumerable<IncidentCard> cards, CancellationToken ct = default)
+    public async IAsyncEnumerable<ActionItem?> PlanAsync(IEnumerable<IncidentCard> cards, [EnumeratorCancellation] CancellationToken ct = default)
     {
-        //var settings = new OpenAIPromptExecutionSettings()
-        //    { ReasoningEffort = "high", ResponseFormat = typeof(ActionPlan), ChatSystemPrompt = SystemPrompt};
-        //var kernelArgs = new KernelArguments(settings) { ["cards"] = string.Join("\n---\n", cards.Select(x => x.ToMarkdown()))};
+        var settings = new OpenAIPromptExecutionSettings()
+        { ReasoningEffort = "high", ResponseFormat = typeof(ActionPlan), ChatSystemPrompt = SystemPrompt };
+        var kernelArgs = new KernelArguments(settings) { ["cards"] = string.Join("\n---\n", cards.Select(x => x.ToMarkdown())) };
         var kernel = CreateKernel();
-        //var result = await kernel.InvokePromptAsync<string>(UserPrompt, kernelArgs, cancellationToken: ct);
-        var actionPlan = new ActionPlan([]);
-       
-        try
+        var result = await kernel.InvokePromptAsync<string>(UserPrompt, kernelArgs, cancellationToken: ct);
+        var actionPlan = JsonSerializer.Deserialize<ActionPlan>(result);
+        if (actionPlan is null || !actionPlan.Actions.Any())
         {
-            var tasks = cards.Select(card => GenerateActionItemAsync(card, ct)).ToList();
-            actionPlan.Actions = (await Task.WhenAll(tasks)).Where(x => x is not null).ToList()!;
-            return actionPlan;
+            _logger.LogError("Failed to deserialize ActionPlan from AI response: {Response}", result);
+            yield break;
         }
-        catch
+        foreach (var action in actionPlan.Actions)
         {
-            _logger.LogError("Failed to deserialize ActionPlan from AI response: {Response}", actionPlan);
-            return null;
+            yield return action;
         }
+
+        //try
+        //{
+        //foreach (var card in cards)
+        //{
+        //    var actionItem = await GenerateActionItemAsync(card, ct);
+        //    if (actionItem is null) continue;
+        //    yield return actionItem;
+        //}
+        //var tasks = cards.Select(card => GenerateActionItemAsync(card, ct)).ToList();
+        //actionPlan.Actions = (await Task.WhenAll(tasks)).Where(x => x is not null).ToList()!;
+        //return actionPlan;
+        //}
+        //catch
+        //{
+        //    _logger.LogError("Failed to deserialize ActionPlan from AI response: {Response}", actionPlan);
+        //    return null;
+        //}
     }
     public async Task<ActionItem?> GenerateActionItemAsync(IncidentCard card, CancellationToken ct = default)
     {
         var settings = new OpenAIPromptExecutionSettings()
-            { ReasoningEffort = "high", ResponseFormat = typeof(ActionItem), ChatSystemPrompt =
+        {
+            ReasoningEffort = "high",
+            ResponseFormat = typeof(ActionItem),
+            ChatSystemPrompt =
                 """
                   You are an expert emergency response coordinator. Provided with incident data, think carefully about the data and how it should inform your action.
                   Create a single, complete and well considered ActionItem based on the incident.

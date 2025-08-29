@@ -46,18 +46,17 @@ public sealed class IncidentCardBuilder
         //var g = _geo.GetGeometry(geometryRef);
         var admin = _admins.ResolveAdminAreas(geom);
         var adminNames = await GetAdminNames(admin);
-        var sviPercentile = 0.5;
-        var pop = /*await _pop.EstimatePopulation(geom);*/new Random().Next(0, 25000);
+        PopulationSvi? sviData = null;
+        
         try
         {
-            sviPercentile = await _svi.GetSviPercentile(geom);
+            sviData = await _svi.GetSviPercentile(geom);
         }
         catch (Exception ex) 
         {
             Console.WriteLine($"SVI lookup failed: {ex.Message}");
         }
 
-        var svi = sviPercentile/* Math.Round(sviPercentile * 100, 1)*/;
         var facilities = await _fac.NearbyFacilities(geom);
 
         var type = i.Source switch
@@ -65,6 +64,7 @@ public sealed class IncidentCardBuilder
             IncidentSource.NwsAlert => "NWS.Alert",
             IncidentSource.UsgsQuake => "USGS.Quake",
             IncidentSource.NhcStorm => "NHC.Storm",
+            IncidentSource.NasaFirms => "NASA.FIRMS",
             _ => "Unknown"
         };
         var sev = i.Severity.ToString().ToLowerInvariant();
@@ -79,8 +79,8 @@ public sealed class IncidentCardBuilder
             Severity: sev,
             Timestamp: i.Timestamp,
             AdminAreas: adminNames.ToArray(),
-            PopulationExposed: pop,
-            SviPercentile: svi,
+            PopulationExposed: sviData?.TotalPopulation ?? new Random().Next(0, 25000),
+            SviPercentile: sviData?.AverageSviPercentile ?? new Random().Next(1, 100)/100.0,
             GeometryRef: geometryRef,
             CriticalFacilities: facilities,
             Sources: links.ToArray(),
@@ -95,14 +95,24 @@ public sealed class IncidentCardBuilder
         var results = new List<string>();
         foreach (var id in ids)
         {
-            var state = id / 1000;        // 19
-            var county = id % 1000;       // 163, 031, ...
-            var url = $"https://api.census.gov/data/2023/acs/acs5?get=NAME&for=county:{county:D3}&in=state:{state:D2}";
-            var json = await http.GetStringAsync(url); // [["NAME","state","county"],["Scott County, Iowa","19","163"],...]
-            var name = System.Text.Json.JsonDocument.Parse(json).RootElement[1][0].GetString();
-            var format = $"{id} → {name}";
-            results.Add(name ?? id.ToString());
-            Console.WriteLine(format);
+            try
+            {
+                var state = id / 1000; // 19
+                var county = id % 1000; // 163, 031, ...
+                var url =
+                    $"https://api.census.gov/data/2023/acs/acs5?get=NAME&for=county:{county:D3}&in=state:{state:D2}";
+                var json = await http
+                    .GetStringAsync(url); // [["NAME","state","county"],["Scott County, Iowa","19","163"],...]
+                var name = System.Text.Json.JsonDocument.Parse(json).RootElement[1][0].GetString();
+                var format = $"{id} → {name}";
+                results.Add(name ?? id.ToString());
+                Console.WriteLine(format);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to resolve admin ID {id}: {ex.Message}");
+                results.Add(id.ToString());
+            }
         }
         return results;
     }

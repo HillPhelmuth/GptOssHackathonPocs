@@ -58,16 +58,16 @@ public partial class Copilot
 
     private string _actionPlanMarkdown;
     private CancellationTokenSource _cts = new();
-    private async Task GenerateActionPlan()
-    {
-        if (_incidents is null) return;
-        var cardTasks = _incidents.Select(incident => CardBuilder.Build(incident)).ToList();
-        var cards = (await Task.WhenAll(cardTasks)).ToList();
-        var token = _cts.Token;
-        Console.WriteLine($"Incident Cards: \n\n{JsonSerializer.Serialize(cards, new JsonSerializerOptions(){WriteIndented = true})}");
-        var actionPlan = await Orchestrator.PlanAsync(cards, token);
-        _actionPlanMarkdown = actionPlan is null ? "### Error\n\nCould not generate action plan." : actionPlan.ToMarkdown();
-    }
+    //private async Task GenerateActionPlan()
+    //{
+    //    if (_incidents is null) return;
+    //    var cardTasks = _incidents.Select(incident => CardBuilder.Build(incident)).ToList();
+    //    var cards = (await Task.WhenAll(cardTasks)).ToList();
+    //    var token = _cts.Token;
+    //    Console.WriteLine($"Incident Cards: \n\n{JsonSerializer.Serialize(cards, new JsonSerializerOptions(){WriteIndented = true})}");
+    //    var actionPlan = await Orchestrator.PlanAsync(cards, token);
+    //    _actionPlanMarkdown = actionPlan is null ? "### Error\n\nCould not generate action plan." : actionPlan.ToMarkdown();
+    //}
     private void CancelGeneration()
     {
         _cts.Cancel();

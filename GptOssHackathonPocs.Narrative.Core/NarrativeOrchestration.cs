@@ -109,18 +109,35 @@ public class NarrativeOrchestration
     private ChatHistory _history = [];
     public async Task RunNarrativeAsync(string userInput, CancellationToken ct = default)
     {
+        if (_history.Count > 30)
+        {
+            _history.RemoveAt(15);
+        }
         _history.AddUserMessage(userInput);
+        var errors = 0;
         while (true)
         {
-            if (ct.IsCancellationRequested) break;
-            var nextAgent = await SelectAgentAsync(_activeAgents, _history, ct);
-            _worldState.ActiveWorldAgent = _worldState.WorldAgents.Agents.FirstOrDefault(a => a.AgentId == nextAgent.Name);
-            var responses = nextAgent.InvokeAsync(_history,options:new AgentInvokeOptions(){Kernel = nextAgent.Kernel}, cancellationToken: ct);
-            await foreach (var response in responses)
+            try
             {
-                var message = response.Message;
-                _history.Add(message);
-                WriteLine($"**{message.Role} - {message.AuthorName ?? "*"}:**\n {message.Content}");
+                if (ct.IsCancellationRequested) break;
+                var nextAgent = await SelectAgentAsync(_activeAgents, _history, ct);
+                _worldState.ActiveWorldAgent =
+                    _worldState.WorldAgents.Agents.FirstOrDefault(a => a.AgentId == nextAgent.Name);
+                var responses = nextAgent.InvokeAsync(_history,
+                    options: new AgentInvokeOptions() { Kernel = nextAgent.Kernel }, cancellationToken: ct);
+                await foreach (var response in responses)
+                {
+                    var message = response.Message;
+                    _history.Add(message);
+                    WriteLine($"**{message.Role} - {message.AuthorName ?? "*"}:**\n {message.Content}");
+                }
+            }
+            catch (Exception ex)
+            {
+                errors++;
+                WriteLine($"Oh, shit! ERROR:\n\n{ex.Message}");
+                if (errors > 10) break;
+                
             }
         }
         

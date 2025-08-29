@@ -1,3 +1,4 @@
+using Blazored.LocalStorage;
 using GptOssHackathonPocs;
 using GptOssHackathonPocs.Components;
 using GptOssHackathonPocs.Core;
@@ -50,7 +51,7 @@ builder.Services.AddAzureClients(clientBuilder =>
     AzureClientFactoryBuilderExtensions.AddBlobServiceClient(clientBuilder, builder.Configuration["StorageConnection:blobServiceUri"]!).WithName("StorageConnection");
     
 });
-
+builder.Services.AddBlazoredLocalStorage();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

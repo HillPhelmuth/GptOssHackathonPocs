@@ -1,26 +1,26 @@
-<div class="card comm-root">
-    <div class="card-header bg-white">
+<div class="comm-card comm-root">
+    <div class="comm-card-header">
         <strong>Communication Hub</strong>
-        <div class="text-muted small">Multi-channel dispatch and stakeholder updates</div>
+        <div class="comm-text-muted comm-text-sm">Multi-channel dispatch and stakeholder updates</div>
     </div>
-    <div class="card-body">
+    <div class="comm-card-body">
         <h6>Active Channels</h6>
-        <div class="row g-2">
+        <div class="comm-grid comm-gap-2">
             @foreach (var ch in Channels)
             {
-                <div class="col-6">
-                    <button class="btn btn-outline-secondary comm-channel" @onclick="() => OnChannelClicked.InvokeAsync(ch)">
-                        <div class="fw-semibold">@ch.Name</div>
-                        <div class="small text-muted">@ch.Description</div>
+                <div class="comm-col-6">
+                    <button class="comm-btn comm-btn-outline comm-channel" @onclick="() => OnChannelClicked.InvokeAsync(ch)">
+                        <div class="comm-fw-semibold">@ch.Name</div>
+                        <div class="comm-text-sm comm-text-muted">@ch.Description</div>
                     </button>
                 </div>
             }
         </div>
         <h6 class="mt-3">Quick Messages</h6>
-        <div class="d-grid gap-2">
+        <div class="comm-grid-block comm-gap-2">
             @foreach (var m in QuickMessages)
             {
-                <button class="btn btn-light border comm-quick" @onclick="() => OnSendQuickMessage.InvokeAsync(m)">@m</button>
+                <button class="comm-btn comm-btn-light comm-border comm-quick" @onclick="() => OnSendQuickMessage.InvokeAsync(m)">@m</button>
             }
         </div>
     </div>

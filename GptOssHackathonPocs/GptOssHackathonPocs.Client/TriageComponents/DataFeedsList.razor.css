@@ -1,0 +1,26 @@
+/* Card */
+.dfl-card{background:#fff;border:1px solid #dee2e6;border-radius:.5rem}
+.dfl-card-header{padding:.5rem .75rem;border-bottom:1px solid #dee2e6;border-top-left-radius:.5rem;border-top-right-radius:.5rem}
+.dfl-card-footer{padding:.5rem .75rem;border-top:1px solid #dee2e6;border-bottom-left-radius:.5rem;border-bottom-right-radius:.5rem}
+
+/* Typography and utils */
+.dfl-text-sm{font-size:.875rem}
+.dfl-text-muted{color:#6c757d}
+.dfl-text-success{color:#198754}
+.dfl-text-end{text-align:right}
+.dfl-fw-semibold{font-weight:600}
+.dfl-float-end{float:right}
+.dfl-ms-2{margin-left:.5rem}
+
+/* Flex */
+.dfl-flex{display:flex}
+.dfl-justify-between{justify-content:space-between}
+
+/* List group */
+.dfl-list{padding:0;margin:0;list-style:none}
+.dfl-list-item{padding:.75rem;border-top:1px solid #e9ecef}
+.dfl-list-item:first-child{border-top:none}
+
+/* Badge */
+.dfl-badge{display:inline-block;padding:.25rem .5rem;font-size:.75rem;font-weight:600;line-height:1;color:#fff;border-radius:.375rem}
+.dfl-badge-success{background:#198754}
