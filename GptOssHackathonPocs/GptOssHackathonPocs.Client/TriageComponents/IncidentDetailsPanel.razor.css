@@ -1,9 +1,10 @@
 /* Card */
 .idp-card {
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: #111827;
+    border: 1px solid #374151;
     border-radius: 8px;
     line-height:1rem;
+    color:#e5e7eb;
 }
 
 .idp-card-body {
@@ -15,9 +16,7 @@
 }
 
 /* Typography */
-.idp-text-muted {
-    color: #6c757d
-}
+.idp-text-muted { color: #9ca3af }
 
 .idp-text-sm {
     font-size: .875rem
@@ -89,32 +88,14 @@
     border-radius: 999px
 }
 
-.idp-badge-light {
-    background: #f8f9fa;
-    color: #212529
-}
+.idp-badge-light { background: #1f2937; color: #e5e7eb }
 
-.idp-border {
-    border: 1px solid #dee2e6
-}
+.idp-border { border: 1px solid #374151 }
 
-.idp-badge-success {
-    background: #198754
-}
-
-.idp-badge-warning {
-    background: #ffc107;
-    color: #212529
-}
-
-.idp-badge-danger {
-    background: #dc3545
-}
-
-.idp-badge-info {
-    background: #0dcaf0;
-    color: #212529
-}
+.idp-badge-success { background: #16a34a }
+.idp-badge-warning { background: #f59e0b; color: #111827 }
+.idp-badge-danger { background: #ef4444 }
+.idp-badge-info { background: #22d3ee; color: #0b1220 }
 
 /* Root and metrics */
 .idp-root {
@@ -125,7 +106,8 @@
 
 .idp-metric {
     padding: 8px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #374151;
     border-radius: 6px;
-    text-align: center
+    text-align: center;
+    background:#0b1220;
 }

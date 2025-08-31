@@ -1,5 +1,4 @@
-@using AINarrativeSimulator.Components.Models
-@using System.Linq
+﻿@using System.Linq
 @namespace AINarrativeSimulator.Components
 
 @* Parameters *@
@@ -28,17 +27,33 @@
         }
         else
         {
-            @foreach (var action in _actionsMarkdown)
+            @foreach (var action in Actions)
             {
-                <div class="action-card @GetActionTypeClass(action.Item1)">
+                <div class="action-card @GetActionTypeClass(action.Type)">
                     <div class="action-icon"></div>
-
-                    <div class="action-body">
-                        <div class="action-head">
-                            <div class="meta">
-                                @action.Item2
-                            </div>
+                    <div class="action-main">
+                        <div class="action-top">
+                            <div class="action-description">@action.BriefDescription</div>
+                            <button type="button"
+                                    class="ef-toggle"
+                                    aria-expanded="@(_expandedAction == action)"
+                                    title="View details"
+                                    @onclick="(() => ToggleExpand(action))">
+                                <span class="ef-toggle-text">@(_expandedAction == action ? "Hide" : "Details")</span>
+                                <span class="ef-chevron">@(_expandedAction == action ? "▲" : "▼")</span>
+                            </button>
                         </div>
+                        @if (_expandedAction == action)
+                        {
+                            <div class="action-body">
+                                <div class="action-head">
+                                    <div class="meta">
+                                        @*  @((MarkupString)MarkdownAsHtml(action.ToTypeMarkdown().Item2)) *@
+                                        @action.ToTypeMarkdown().Item2
+                                    </div>
+                                </div>
+                            </div>
+                        }
                     </div>
                 </div>
             }

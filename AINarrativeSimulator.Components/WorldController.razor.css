@@ -141,7 +141,7 @@
 
     .panel.world-controller .content {
         padding: 1rem;
-        max-height: 90%;
+        max-height: 30rem;
         overflow-y: auto;
     }
 

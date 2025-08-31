@@ -21,22 +21,24 @@
     display: flex;
     justify-content: center;
     gap: 8px;
-    border-bottom: 1px solid #e2e8f0
+    border-bottom: 1px solid #374151;
 }
 .td-btn {
-    border-radius: 6px 6px 6px 6px;
-    color: darkblue;
+    border-radius: 6px;
+    color: #e5e7eb;
+    background: #1f2937;
+    border: 1px solid #374151;
     cursor: pointer;
     font-weight: 600;
     font-size: 85%;
 }
 .td-home {
-    border-radius: 6px 6px 6px 6px;
-    color: white;
+    border-radius: 6px;
+    color: #fff;
     cursor: pointer;
     font-weight: 600;
     font-size: 85%;
-    background-color:darkblue
+    background: #2563eb;
 }
 .td-tab {
     appearance: none;
@@ -44,7 +46,7 @@
     background: transparent;
     padding: 5px 7px;
     border-radius: 8px 8px 0 0;
-    color: #64748b;
+    color: #9ca3af;
     cursor: pointer;
     font-weight: 600;
     font-size: 85%;
@@ -52,12 +54,13 @@
 
     .td-tab.active,
     .td-tab.td-tab-active {
-        background: #0b0f1a;
-        color: #fff
+    background: #0b0f1a;
+    color: #fff;
+    border: 1px solid #374151;
     }
 
     .td-tab:hover {
-        color: #0b0f1a
+    color: #e5e7eb
     }
 
 .td-tabpanes {
@@ -65,10 +68,11 @@
 }
 
 .td-pane {
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: #111827;
+    border: 1px solid #374151;
     border-radius: 8px;
-    padding: 12px
+    padding: 12px;
+    color:#e5e7eb;
 }
 
 .td-block-gap {
@@ -80,3 +84,46 @@
         grid-template-columns: 1fr
     }
 }
+
+/* Busy overlay */
+.td-busy-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.td-busy-card {
+    background: #0b1220;
+    border: 1px solid #374151;
+    border-radius: 10px;
+    padding: 20px 24px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    max-width: 520px;
+    width: calc(100% - 32px);
+    color:#e5e7eb;
+}
+
+.td-busy-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.td-spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid #374151;
+    border-top-color: #22d3ee; /* cyan */
+    border-radius: 50%;
+    animation: td-spin 0.9s linear infinite;
+}
+
+@keyframes td-spin {
+    to { transform: rotate(360deg); }
+}
+
+.td-busy-text { font-weight: 600; color: #e5e7eb }

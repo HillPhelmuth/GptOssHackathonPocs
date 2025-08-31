@@ -2,7 +2,7 @@ using System.Net.Http.Json;
 using GptOssHackathonPocs.Core.Models;
 using Microsoft.Extensions.Logging;
 
-namespace GptOssHackathonPocs.Core.Services;
+namespace GptOssHackathonPocs.Core.Services.PublishActions;
 
 public class SlackPlanPublisher(ILogger<SlackPlanPublisher> logger, IHttpClientFactory http) : IPlanPublisher
 {

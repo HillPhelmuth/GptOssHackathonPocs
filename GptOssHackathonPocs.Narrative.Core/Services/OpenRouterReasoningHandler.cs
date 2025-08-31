@@ -24,7 +24,7 @@ internal class OpenRouterReasoningHandler(HttpMessageHandler innerHandler, ILogg
         if (request.Content is not null)
         {
             var content = await request.Content.ReadAsStringAsync(cancellationToken);
-            _output.LogInformation("===ORIGINAL REQUEST ===\n\n" + content);
+            //_output.LogInformation("===ORIGINAL REQUEST ===\n\n" + content);
             try
             {
                 //string formattedContent = JsonSerializer.Serialize(JsonSerializer.Deserialize<JsonElement>(content), s_jsonSerializerOptions);

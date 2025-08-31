@@ -2,7 +2,7 @@ using System.Xml.Linq;
 using GptOssHackathonPocs.Core.Models;
 using Microsoft.Extensions.Logging;
 
-namespace GptOssHackathonPocs.Core.Services;
+namespace GptOssHackathonPocs.Core.Services.PublishActions;
 
 public class CapFilePlanPublisher(ILogger<CapFilePlanPublisher> logger) : IPlanPublisher
 {

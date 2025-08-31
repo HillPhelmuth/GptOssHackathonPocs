@@ -1,5 +1,4 @@
-﻿using GptOssHackathonPocs.Core.Models.Enrichment;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -60,115 +59,11 @@ namespace GptOssHackathonPocs.Core.Models;
 //    }
 //}
 
-[Description("Represents an actionable task for a specific incident, including rationale, supporting evidence, required tools, priority, audience, and optional parameters.")]
-public sealed record ActionItem
-{
-    public ActionItem(string IncidentId,
-        string Title,                 // "Pre-stage pumps at XYZ"
-        string Rationale,         // human-readable, cite evidence labels
-        string[] EvidenceLabels,     // must match EvidenceLink.label provided
-        string[] RequiredTools,      // e.g., ["Publish_Closure","Notify_Channel"]
-        string Priority,              // "urgent|high|normal|low"
-        string Audience,              // "ops|public|ems"
-        Dictionary<string, string>? Parameters)
-    {
-        this.IncidentId = IncidentId;
-        this.Title = Title;
-        this.Rationale = Rationale;
-        this.EvidenceLabels = EvidenceLabels;
-        this.RequiredTools = RequiredTools;
-        this.Priority = Priority;
-        this.Audience = Audience;
-        this.Parameters = Parameters;
-    }
-
-    [JsonPropertyName("incident_id")]
-    [Description("Identifier of the incident this action item is associated with.")]
-    public string IncidentId { get; set; }
-
-    [JsonPropertyName("title")]
-    [Description("Short, human-readable title describing the action to take.")]
-    public string Title { get; set; }
-
-    [JsonPropertyName("rationale")]
-    [Description("Explanation of why this action is recommended, optionally citing evidence labels.")]
-    public string Rationale { get; set; }
-    [JsonPropertyName("description")]
-    [Description("Description of the Incident details intended for a broad audience")]
-    public string Description { get; set; }
-    [JsonPropertyName("evidence_labels")]
-    [Description("Labels referencing evidence items that support this action.")]
-    public string[] EvidenceLabels { get; set; }
-
-    [JsonPropertyName("required_tools")]
-    [Description("List of tool identifiers required to execute this action. options are Slack/Teams message, SMS alerts, emails, WEA public alert, Field op radio dispatch ")]
-    public string[] RequiredTools { get; set; }
-
-    [JsonPropertyName("priority")]
-    [Description("Action priority. Expected values: urgent, high, normal, or low.")]
-    public string Priority { get; set; }
-    [JsonPropertyName("severity_level")]
-    [Description("Numerical severity level from 1 (lowest) to 10 (highest) indicating the Severity of the incident based on a combination of the event severity and the population affected.")]
-    public int SeverityLevel { get; set; }
-    [JsonPropertyName("urgency_level")]
-    [Description("Numerical urgency level from 1 (lowest) to 10 (highest) indicating the Urgency (i.e. time-sensitive nature) of the incident.")]
-    public int UrgencyLevel { get; set; }
-    [JsonPropertyName("audience")]
-    [Description("Intended audience for the action. Expected values: ops, public, or ems.")]
-    public string Audience { get; set; }
-    [JsonPropertyName("instructions")]
-    [Description("Very Detailed, human-readable, step-by-step instructions for executing the action.")]
-    public string Instructions { get; set; }
-
-    [JsonPropertyName("parameters")]
-    [Description("Optional key/value parameters consumed by the required tools for execution.")]
-    public Dictionary<string, string>? Parameters { get; set; }
-    
-    public string ToMarkdown()
-    {
-        var sb = new StringBuilder();
-        // Add Each property with its description if available and value in markdown format
-        sb.AppendLine($" **Action for Incident {IncidentId}**");
-        sb.AppendLine($"- {LabelWithDesc("Title", nameof(Title))}: {Title}");
-        sb.AppendLine($"- {LabelWithDesc(nameof(Description), nameof(Description))}: {Description}");
-        sb.AppendLine($"- {LabelWithDesc("Rationale", nameof(Rationale))}: {Rationale}");
-        sb.AppendLine($"- {LabelWithDesc("Evidence Labels", nameof(EvidenceLabels))}: {string.Join(", ", EvidenceLabels)}");
-        sb.AppendLine($"- {LabelWithDesc("Required Tools", nameof(RequiredTools))}: {string.Join(", ", RequiredTools)}");
-        sb.AppendLine($"- {LabelWithDesc("Priority", nameof(Priority))}: {Priority}");
-        sb.AppendLine($"- {LabelWithDesc("Audience", nameof(Audience))}: {Audience}");
-        sb.AppendLine($"- {LabelWithDesc("Severity Level", nameof(SeverityLevel))}: {SeverityLevel}");
-        
-        if (Parameters is { Count: > 0 })
-        {
-            sb.AppendLine($"- {LabelWithDesc("Parameters", nameof(Parameters))}:");
-            foreach (var param in Parameters)
-            {
-                sb.AppendLine($"  - {param.Key}: {param.Value}");
-            }
-        }
-
-        return sb.ToString();
-        static string PropDescription(string propName)
-        {
-            var prop = typeof(IncidentCard).GetProperty(propName);
-            if (prop is null) return string.Empty;
-            var attr = (DescriptionAttribute?)Attribute.GetCustomAttribute(prop, typeof(DescriptionAttribute));
-            return attr?.Description ?? string.Empty;
-        }
-
-        static string LabelWithDesc(string label, string propName)
-        {
-            var desc = PropDescription(propName);
-            return string.IsNullOrWhiteSpace(desc) ? label : $"{label} ({desc})";
-        }
-    }
-}
-
 [Description("A collection of action items produced for one or more incidents.")]
-public sealed record ActionPlan(
-    ActionItem[] actions
-)
+public sealed record ActionPlan
 {
+    
+
     [Description("Renders the action plan into a human-readable Markdown string.")]
     public string ToMarkdown()
     {
@@ -183,5 +78,18 @@ public sealed record ActionPlan(
     }
 
     [JsonPropertyName("actionItems"), Description("The set of action items that comprise this plan.")]
-    public IEnumerable<ActionItem> Actions { get; set; } = actions;
+    public IEnumerable<ActionItem> Actions { get; set; }
+
+    
+}
+public class ActionStep
+{
+    [Description("Name of the step")]
+    public required string Name { get; set; }
+    [Description("Specific text instructions for carrying out the step")]
+    public required string Text { get; set; } 
+    [Description("Optional assignee for the step. Assignee is the person, entity or service responsible for taking the action step")]
+    public string? Assignee { get; set; }
+    [Description("Optional due date/time for the step")]
+    public DateTimeOffset? Due { get; set; }
 }

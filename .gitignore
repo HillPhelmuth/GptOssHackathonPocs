@@ -362,3 +362,4 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /GptOssHackathonPocs.Core/searchwithsemantickernel-a3b6f34079f4.json
+/GptOssHackathonPocs.Core/Models/Enrichment/Templates/ghsl_population_sum_template.json

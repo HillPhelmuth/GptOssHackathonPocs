@@ -88,34 +88,35 @@ public sealed class IncidentCardBuilder
         );
     }
 
-    private async Task<List<string>> GetAdminNames(string[] adminIds)
+    private async Task<List<string?>> GetAdminNames(string[] adminIds)
     {
         using var http = new HttpClient();
         var ids = adminIds.Select(id => int.TryParse(id, out var v) ? v : 0).Where(v => v != 0);
-        var results = new List<string>();
-        foreach (var id in ids)
-        {
-            try
-            {
-                var state = id / 1000; // 19
-                var county = id % 1000; // 163, 031, ...
-                var url =
-                    $"https://api.census.gov/data/2023/acs/acs5?get=NAME&for=county:{county:D3}&in=state:{state:D2}";
-                var json = await http
-                    .GetStringAsync(url); // [["NAME","state","county"],["Scott County, Iowa","19","163"],...]
-                var name = System.Text.Json.JsonDocument.Parse(json).RootElement[1][0].GetString();
-                var format = $"{id} → {name}";
-                results.Add(name ?? id.ToString());
-                Console.WriteLine(format);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Failed to resolve admin ID {id}: {ex.Message}");
-                results.Add(id.ToString());
-            }
-        }
-        return results;
+        var resultTasks = ids.Select(id => GetAdminNameTask(id, http)).ToList();
+        return (await Task.WhenAll(resultTasks)).ToList();
     }
+
+    private static async Task<string?> GetAdminNameTask(int id, HttpClient http)
+    {
+        try
+        {
+            var state = id / 1000; // 19
+            var county = id % 1000; // 163, 031, ...
+            var url =
+                $"https://api.census.gov/data/2023/acs/acs5?get=NAME&for=county:{county:D3}&in=state:{state:D2}";
+            var json = await http
+                .GetStringAsync(url); // [["NAME","state","county"],["Scott County, Iowa","19","163"],...]
+            var name = System.Text.Json.JsonDocument.Parse(json).RootElement[1][0].GetString();
+
+            return name;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to resolve admin ID {id}: {ex.Message}");
+            return id.ToString();
+        }
+    }
+
     private static double? TryParseMagnitude(string? s)
     {
         if (string.IsNullOrWhiteSpace(s)) return null;

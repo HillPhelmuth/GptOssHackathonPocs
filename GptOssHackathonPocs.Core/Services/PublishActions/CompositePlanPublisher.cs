@@ -1,7 +1,7 @@
 using GptOssHackathonPocs.Core.Models;
 using Microsoft.Extensions.Logging;
 
-namespace GptOssHackathonPocs.Core.Services;
+namespace GptOssHackathonPocs.Core.Services.PublishActions;
 
 public class CompositePlanPublisher(ILogger<CompositePlanPublisher> logger, IEnumerable<IPlanPublisher> publishers) : IActionPlanPublisher
 {

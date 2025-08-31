@@ -1,22 +1,28 @@
 ﻿@page "/"
 
 <PageTitle>Home</PageTitle>
-<div style="height:100vh;width100vw">
-    <div style="display:flex;justify-content:center;flex-direction:column;height:10rem;width:10rem">
 
-        <div>
-            <a href="copilot">Disaster Triage Copilot</a>
+<section class="home-hero">
+    <div class="hero-content">
+        <h1>AI Hackathon Playground</h1>
+        <p class="lead">Explore working POCs for incident triage and agent-based narrative simulation.</p>
+
+        <div class="cta-grid">
+            <a class="cta-card" href="copilot">
+                <div class="cta-icon icon-copilot" aria-hidden="true"></div>
+                <div class="cta-title">Disaster Triage Copilot</div>
+                <div class="cta-desc">Coordinate faster during emergencies with live maps, enriched context, and AI-assisted action planning.</div>
+                <span class="cta-arrow">→</span>
+            </a>
+            <a class="cta-card" href="narrativezoo">
+                <div class="cta-icon icon-narrative" aria-hidden="true"></div>
+                <div class="cta-title">Narrative Zoo</div>
+                <div class="cta-desc">An interactive agent sandbox with emergent stories, event feeds, and world controls.</div>
+                <span class="cta-arrow">→</span>
+            </a>
         </div>
-        <div>
-            <a href="narrativezoo">Narrative Zoo</a>
-        </div>
+
+        <p class="footnote">Built for quick demos—choose a tile to jump in.</p>
     </div>
-</div>
-@* @if (!_toggleView)
-{
-    <Copilot></Copilot>
-}
-else
-{
-    <NarrativeZooPage></NarrativeZooPage>
-} *@
+    
+</section>

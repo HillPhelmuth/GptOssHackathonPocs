@@ -22,7 +22,7 @@
                         break;
                     case Tab.Feeds:
                         <div class="td-pane">
-                            <DataFeedsList />
+                            <DataFeedsList  Incidents="@_incidents" />
                         </div>
                         break;
                     case Tab.Comm:
@@ -33,24 +33,33 @@
                 }
                 <div class="td-block-gap"></div>
                 @* <ActionQueue Items="@_queue" OnStatusChanged="OnActionStatusChanged" /> *@
-                <select style="max-width:15rem" @onchange="HandleSelectChange">
-                    @foreach(var inc in _incidents ?? [])
-                    {
-                        <option value="@inc.Id">@inc.Title</option>
-                    }
-                </select> 
+                <label>
+                    View Incident:
+                    <select style="max-width:15rem" @onchange="HandleSelectChange">
+                        @foreach (var inc in _incidents ?? [])
+                        {
+                            <option value="@inc.Id">@inc.Title</option>
+                        }
+                    </select>
+                </label>
                 <IncidentDetailsPanel Incident="@_selected" PopulationAffected="@(_selectedCard?.PopulationExposed ?? 0.0)" SviPercentile="@(_selectedCard?.SviPercentile ?? 0.0)"/>
             </div>
         </div>
         <div class="td-side">
-            @* <IncidentDetailsPanel Incident="@_selected" />
-            <select style="max-width:15rem" @onchange="HandleSelectChange">
-                @foreach(var inc in _incidents ?? [])
-                {
-                    <option value="@inc.Id">@inc.Title</option>
-                }
-            </select> *@
+           
             <ActionQueue Items="@_queue" OnStatusChanged="OnActionStatusChanged" />
         </div>
     </div>
+
+    @if (_isBusy)
+    {
+        <div class="td-busy-backdrop" role="dialog" aria-modal="true" aria-live="polite">
+            <div class="td-busy-card" @onclick:stopPropagation>
+                <div class="td-busy-row">
+                    <div class="td-spinner" aria-hidden="true"></div>
+                    <div class="td-busy-text">@_busyText</div>
+                </div>
+            </div>
+        </div>
+    }
 </div>

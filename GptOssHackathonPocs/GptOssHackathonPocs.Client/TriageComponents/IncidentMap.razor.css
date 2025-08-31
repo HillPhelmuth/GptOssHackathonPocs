@@ -1,0 +1,19 @@
+/* Map container styling to match dark panels */
+.im-container {
+	background: #111827;
+	border: 1px solid #374151;
+	border-radius: 12px;
+	overflow: hidden;
+}
+
+.im-legend {
+	position: absolute;
+	right: 12px;
+	bottom: 12px;
+	background: rgba(17,24,39,.9);
+	border: 1px solid #374151;
+	border-radius: .5rem;
+	padding: .5rem .75rem;
+	color: #e5e7eb;
+	font-size: .85rem;
+}

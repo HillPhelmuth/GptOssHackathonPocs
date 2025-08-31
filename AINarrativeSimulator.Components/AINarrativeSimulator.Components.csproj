@@ -1,10 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk.Razor">
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <Platforms>AnyCPU;ARM64;x64</Platforms>
+    <UserSecretsId>ca9c757c-55a4-4f67-8af5-13d71fd24b40</UserSecretsId>
   </PropertyGroup>
 
 
@@ -14,6 +15,7 @@
 
   <ItemGroup>
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
+    <PackageReference Include="Markdig" Version="0.41.3" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.8" />
   </ItemGroup>
 

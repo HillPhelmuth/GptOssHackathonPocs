@@ -20,19 +20,19 @@ public class WorldAgents
 public class WorldAgent
 {
     [JsonPropertyName("agent_id")]
-    public string AgentId { get; set; }
+    public required string AgentId { get; set; }
 
     [JsonPropertyName("static_traits")]
-    public StaticTraits StaticTraits { get; set; }
+    public required StaticTraits StaticTraits { get; set; }
 
     [JsonPropertyName("dynamic_state")]
-    public DynamicState DynamicState { get; set; }
+    public required DynamicState DynamicState { get; set; }
 
     [JsonPropertyName("knowledge_memory")]
-    public KnowledgeMemory KnowledgeMemory { get; set; }
+    public required KnowledgeMemory KnowledgeMemory { get; set; }
 
     [JsonPropertyName("prompt")]
-    public string Prompt { get; set; }
+    public required string Prompt { get; set; }
     public string? Notes { get; private set; }
     public DateTime LastUpdate { get; set; }
 
@@ -49,25 +49,88 @@ public class WorldAgent
         sb.AppendLine(notes);
         Notes = sb.ToString();
     }
-    public string GetSystemPrompt()
+    public string GetSystemPrompt(string worldStateDescription = "")
     {
         return $"""
                 {Prompt}
 
                 ## Instructions
                 
-                * Before responding, always update your dynamic state and knowledge memory below by invoking `WorldAgentsPlugin-UpdateAgentState` and `WorldAgentsPlugin-UpdateAgentMemory` tool functions.
+                * Before responding, always start by taking an action. Use the information below, with particular focus on **World State**, to inform your decisions.
                 
                 * When responding, always begin your response with "From {AgentId}" as the first line.
                 
-                ## Current State
+                ## Your Current State
 
                 {DynamicState.ToMarkdown()}
 
-                ## Current Knowledge and Relationships
+                ## Your Current Knowledge and Relationships
 
                 {KnowledgeMemory.ToMarkdown()}
+                
+                ## World State
+                
+                {worldStateDescription}
                 """;
+    }
+
+    public string UpdateDynamicStatePrompt(string worldStateDescription, string actionDescription)
+    {
+        return 
+            $"""
+            {Prompt}
+            
+            ## Instructions
+            
+            Update your current mood, short-term goals, long term goals, and location as required by the action you just took and the current world state.
+            
+            Do not remove any existing goals, just modify existing goals add/or new ones as needed.
+            
+            ## Your Current State
+            
+            {DynamicState.ToMarkdown()}
+            
+            ## Your Current Knowledge and Relationships
+            
+            {KnowledgeMemory.ToMarkdown()}
+            
+            ## World State
+            
+            {worldStateDescription}
+            
+            ## Action Taken
+            
+            {actionDescription}
+            """;
+    }
+    public string UpdateKnowledgeMemoryPrompt(string worldStateDescription, string actionDescription)
+    {
+        return 
+            $"""
+            {Prompt}
+            
+            ## Instructions
+            
+            Update your relationships and key memories as required by the action you just took and the current world state.
+            
+            Do not remove any existing relationships or memories, just modify existing ones and/or add new ones as needed.
+            
+            ## Your Current State
+            
+            {DynamicState.ToMarkdown()}
+            
+            ## Your Current Knowledge and Relationships
+            
+            {KnowledgeMemory.ToMarkdown()}
+            
+            ## World State
+            
+            {worldStateDescription}
+            
+            ## Action Taken
+            
+            {actionDescription}
+            """;
     }
 }
 
@@ -77,13 +140,13 @@ public class DynamicState
     public Mood CurrentMood { get; set; }
 
     [JsonPropertyName("short_term_goals")]
-    public List<string> ShortTermGoals { get; set; }
+    public required List<string> ShortTermGoals { get; set; }
 
     [JsonPropertyName("long_term_goals")]
-    public List<string> LongTermGoals { get; set; }
+    public required List<string> LongTermGoals { get; set; }
 
     [JsonPropertyName("physical_location")]
-    public string PhysicalLocation { get; set; }
+    public required string PhysicalLocation { get; set; }
 
     public string ToMarkdown()
     {
@@ -113,10 +176,10 @@ public class DynamicState
 public class KnowledgeMemory
 {
     [JsonPropertyName("relationships")]
-    public List<Relationship> Relationships { get; set; }
+    public required List<Relationship> Relationships { get; set; }
 
-    [JsonPropertyName("key_memories")]
-    public List<string> KeyMemories { get; set; }
+    [JsonPropertyName("recent_memories")]
+    public required List<string> RecentMemories { get; set; }
     public string ToMarkdown()
     {
         var markdownBuilder = new StringBuilder();
@@ -134,10 +197,10 @@ public class KnowledgeMemory
                 }
             }
         }
-        if (KeyMemories is { Count: > 0 })
+        if (RecentMemories is { Count: > 0 })
         {
             markdownBuilder.AppendLine($"### Key Memories:");
-            foreach (var mem in KeyMemories)
+            foreach (var mem in RecentMemories)
             {
                 markdownBuilder.AppendLine($"- {mem}");
             }
@@ -149,34 +212,34 @@ public class KnowledgeMemory
 public class Relationship
 {
     [JsonPropertyName("Name")]
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
     [JsonPropertyName("details")]
-    public Details Details { get; set; }
+    public required Details Details { get; set; }
 }
 
 public class Details
 {
     [JsonPropertyName("type")]
-    public string Type { get; set; }
+    public required string Type { get; set; }
 
     [JsonPropertyName("trust")]
     public long Trust { get; set; }
 
     [JsonPropertyName("notes")]
-    public string Notes { get; set; }
+    public required string Notes { get; set; }
 }
 
 public class StaticTraits
 {
     [JsonPropertyName("personality")]
-    public List<string> Personality { get; set; }
+    public required string PersonalityTraits { get; set; }
 
     [JsonPropertyName("profession")]
-    public string Profession { get; set; }
+    public required string Profession { get; set; }
 
     [JsonPropertyName("core_values")]
-    public List<string> CoreValues { get; set; }
+    public required string CoreValues { get; set; }
 }
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum Mood
@@ -200,5 +263,6 @@ public enum Mood
     Amused,
     Measured,
     Energetic,
-    Restless
+    Restless,
+    Violent
 }

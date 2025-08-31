@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.ComponentModel;
+using System.Text.Json;
 using NetTopologySuite.Geometries;
 
 namespace GptOssHackathonPocs.Core.Models.Enrichment;
@@ -10,12 +11,20 @@ namespace GptOssHackathonPocs.Core.Models.Enrichment;
 ///  - 2020 tracts: https://services2.arcgis.com/Eb8y2VjBgkqbQJwk/arcgis/rest/services/CDC_SVI2020/FeatureServer/0
 ///  - 2022 (archive): https://services2.arcgis.com/FiaPA4ga0iQKduv3/arcgis/rest/services/CDC_SVI_2022_%28Archive%29/FeatureServer/2
 /// </summary>
+[Description("Client for querying CDC/ATSDR SVI FeatureServer and returning population-weighted SVI percentiles.")]
 public sealed class SviIndexArcGis : ISviIndex
 {
     private readonly HttpClient _http;
     private readonly string _layerUrl;
     private readonly string _field;
 
+    /// <summary>
+    /// Creates a new instance of <see cref="SviIndexArcGis"/>.
+    /// </summary>
+    /// <param name="http">Configured HttpClient used to query the ArcGIS FeatureServer.</param>
+    /// <param name="layerUrl">FeatureServer layer URL (defaults to CDC SVI 2022 archive layer).</param>
+    /// <param name="field">Field name containing SVI percentile values (defaults to "RPL_THEMES").</param>
+    [Description("Initializes the SviIndexArcGis client with an HttpClient, FeatureServer layer URL and SVI field name.")]
     public SviIndexArcGis(HttpClient http,
         string layerUrl =
             "https://services2.arcgis.com/FiaPA4ga0iQKduv3/arcgis/rest/services/CDC_SVI_2022_(Archive)/FeatureServer/2",
@@ -26,9 +35,24 @@ public sealed class SviIndexArcGis : ISviIndex
         _field = field;
     }
 
+    /// <summary>
+    /// Synchronously-friendly wrapper that gets the SVI percentile for the provided geometry.
+    /// </summary>
+    /// <param name="g">Geometry (e.g., point or polygon) to query against SVI tracts. Must be non-null and non-empty.</param>
+    /// <returns>A <see cref="PopulationSvi"/> containing the total population and average SVI percentile for intersecting tracts.</returns>
+    [Description("Synchronous wrapper returning population and average SVI percentile for the given geometry.")]
     public async Task<PopulationSvi> GetSviPercentile(Geometry? g)
         => await GetPercentileAsync(g, CancellationToken.None);
 
+    /// <summary>
+    /// Queries the configured ArcGIS FeatureServer for intersecting features, extracts SVI percentiles and populations,
+    /// and returns an aggregated <see cref="PopulationSvi"/> that contains the total population and the average SVI percentile.
+    /// </summary>
+    /// <param name="g">Geometry to query. Must not be null or empty.</param>
+    /// <param name="ct">Cancellation token for the asynchronous operation.</param>
+    /// <returns>A <see cref="PopulationSvi"/> with total population and average SVI percentile (0..1).</returns>
+    /// <exception cref="Exception">Thrown when geometry is null/empty or when no valid features are returned.</exception>
+    [Description("Asynchronously queries ArcGIS for features intersecting the geometry and computes population-weighted SVI statistics.")]
     public async Task<PopulationSvi> GetPercentileAsync(Geometry? g, CancellationToken ct)
     {
         if (g is null || g.IsEmpty) throw new Exception("Geometry is FUCKING null");
@@ -44,58 +68,17 @@ public sealed class SviIndexArcGis : ISviIndex
         };
         var geometryJson = JsonSerializer.Serialize(geometryObj);
 
-        // 1) Try server-side stats (avg + max) E_TOTPOP
-        //var stats = new[] {
-        //    new { statisticType = "avg", onStatisticField = "RPL_THEMES", outStatisticFieldName = "avg" },
-        //    new { statisticType = "max", onStatisticField = "RPL_THEMES", outStatisticFieldName = "max" },
-        //    new { statisticType = "tot", onStatisticField = "E_TOTPOP", outStatisticFieldName = "totpop" }// Unsure if this is correct
-        //};
-
-        //var qs = new Dictionary<string, string>
-        //{
-        //    ["f"] = "json",
-        //    ["where"] = "1=1",
-        //    ["geometryType"] = "esriGeometryEnvelope",
-        //    ["geometry"] = geometryJson,          // <-- JSON envelope + SR
-        //    ["inSR"] = "4326",                    // <-- include input SR
-        //    ["spatialRel"] = "esriSpatialRelIntersects",
-        //    ["returnGeometry"] = "false",
-        //    ["outStatistics"] = JsonSerializer.Serialize(stats),
-        //};
-
-        //var url = $"{_layerUrl}/query?{BuildQuery(qs)}";
-        //using var resp = await _http.GetAsync(url, ct);
-        //resp.EnsureSuccessStatusCode();
-
-        //using var doc = await JsonDocument.ParseAsync(await resp.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
-        //if (doc.RootElement.TryGetProperty("features", out var feats) && feats.GetArrayLength() > 0)
-        //{
-        //    var attrs = feats[0].GetProperty("attributes");
-        //    if (attrs.TryGetProperty("avg", out var avgToken) && avgToken.ValueKind == JsonValueKind.Number)
-        //    {
-        //        var percentileAsync = avgToken.GetDouble();
-        //        if (percentileAsync is >= 0 and <= 1)
-        //            return percentileAsync;
-        //    }
-        //    if (attrs.TryGetProperty("max", out var maxToken) && maxToken.ValueKind == JsonValueKind.Number)
-        //    {
-        //        var percentileAsync = maxToken.GetDouble();
-        //        if (percentileAsync is >= 0 and <= 1)
-        //            return percentileAsync;
-        //    }
-        //}
-
-        // Fallback: fetch values and average client-side
+        
         var qs2 = new Dictionary<string, string>
         {
             ["f"] = "json",
             ["where"] = "1=1",
             ["geometryType"] = "esriGeometryEnvelope",
-            ["geometry"] = geometryJson,          // <-- same JSON geometry
-            ["inSR"] = "4326",                    // <-- WAS MISSING BEFORE
+            ["geometry"] = geometryJson,          
+            ["inSR"] = "4326",                    
             ["spatialRel"] = "esriSpatialRelIntersects",
             ["returnGeometry"] = "false",
-            ["outFields"] = "RPL_THEMES,E_TOTPOP",               // RPL_THEMES,E_TOTPOP
+            ["outFields"] = "RPL_THEMES,E_TOTPOP", // RPL_THEMES = Svi data,E_TOTPOP = population data
             ["resultRecordCount"] = "2000"
         };
         var url2 = $"{_layerUrl}/query?{BuildQuery(qs2)}";
@@ -107,7 +90,7 @@ public sealed class SviIndexArcGis : ISviIndex
         if (!doc2.RootElement.TryGetProperty("features", out var feats2) || feats2.GetArrayLength() == 0)
             throw new Exception($"doc2 is FUCKING missing `features`\n\nsee here\n{doc2.RootElement.ToString()}");
 
-        double sum = 0; 
+        double sum = 0;
         int n = 0;
         int pop = 0;
         foreach (var f in feats2.EnumerateArray())
@@ -130,7 +113,38 @@ public sealed class SviIndexArcGis : ISviIndex
         return new PopulationSvi(sviPop, sviPercentile);
     }
 
+    
     private static string BuildQuery(Dictionary<string, string> kv)
         => string.Join("&", kv.Select(kvp => $"{Uri.EscapeDataString(kvp.Key)}={Uri.EscapeDataString(kvp.Value)}"));
 }
-public record PopulationSvi(int TotalPopulation, double AverageSviPercentile);
+/// <summary>
+/// Result type representing the total population and the average SVI percentile (0..1) for that population.
+/// </summary>
+[Description("Represents total population and average SVI percentile computed from intersecting features.")]
+public record PopulationSvi
+{
+    /// <summary>
+    /// Initializes a new instance of <see cref="PopulationSvi"/>.
+    /// </summary>
+    /// <param name="TotalPopulation">Total population for intersecting features.</param>
+    /// <param name="AverageSviPercentile">Average SVI percentile (range 0..1).</param>
+    [Description("Constructs a PopulationSvi with total population and average SVI percentile.")]
+    public PopulationSvi(int TotalPopulation, double AverageSviPercentile)
+    {
+        this.TotalPopulation = TotalPopulation;
+        this.AverageSviPercentile = AverageSviPercentile;
+    }
+
+    /// <summary>
+    /// Total population covered by the intersecting features.
+    /// </summary>
+    [Description("Total population covered by intersecting features.")]
+    public int TotalPopulation { get; init; }
+
+    /// <summary>
+    /// Average SVI percentile for the intersecting features (value between 0 and 1).
+    /// </summary>
+    [Description("Average SVI percentile for the intersecting features (0..1).")]
+    public double AverageSviPercentile { get; init; }
+
+}

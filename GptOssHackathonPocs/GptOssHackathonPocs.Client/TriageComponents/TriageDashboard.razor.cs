@@ -79,9 +79,15 @@ public partial class TriageDashboard
 
     private string ActiveTabClass(Tab t) => _activeTab == t ? "td-tab active" : "td-tab";
     private List<IncidentCard> _cards = [];
+    private bool _isBusy = false;
+    private string _busyText = "";
     private async Task GenerateActionPlan()
     {
         if (_incidents is null) return;
+        _isBusy = true;
+        _busyText = "Hydrating Incidents with vulnerability, population and other data...";
+        StateHasChanged();
+        await Task.Delay(1);
         var cardTasks = _incidents.Select(incident => CardBuilder.Build(incident)).ToList();
         var cards = (await Task.WhenAll(cardTasks)).ToList();
         _cards = cards;
@@ -90,6 +96,9 @@ public partial class TriageDashboard
         //var actionPlan = await Orchestrator.PlanAsync(cards, token);
         var actions = new List<ActionItem>();
         _queue.Clear();
+        _busyText = "Gpt-Oss Generating Action Plan...";
+        StateHasChanged();
+        
         await foreach (var action in Orchestrator.PlanAsync(cards, token))
         {
             if (action is null) continue;
@@ -97,8 +106,10 @@ public partial class TriageDashboard
             _queue.Add(new ActionQueue.ActionQueueItem(action.IncidentId ?? "", action.Title, action.Instructions, action.SeverityLevel, action.UrgencyLevel, action.ToMarkdown()));
             InvokeAsync(StateHasChanged);
         }
-        var actionPlan = new ActionPlan(actions.ToArray());
+
+        var actionPlan = new ActionPlan { Actions = actions};
         _actionPlanMarkdown = actionPlan is null ? "### Error\n\nCould not generate action plan." : actionPlan.ToMarkdown();
+        _isBusy = false;
         StateHasChanged();
     }
     private void CancelGeneration()

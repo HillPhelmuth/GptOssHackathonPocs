@@ -18,7 +18,7 @@ public partial class NarrativeZooPage : ComponentBase, IDisposable
 
     protected override void OnInitialized()
     {
-        NarrativeOrchestration.WriteAgentChatMessage += OnAgentMessage;
+        //NarrativeOrchestration.WriteAgentChatMessage += OnAgentMessage;
     }
 
     private void OnAgentMessage(string msg)
@@ -28,26 +28,26 @@ public partial class NarrativeZooPage : ComponentBase, IDisposable
         InvokeAsync(StateHasChanged);
     }
 
-    private async Task RunAsync()
-    {
-        if (_isRunning) return;
-        _isRunning = true;
-        try
-        {
-            var token = _cts.Token;
-            await NarrativeOrchestration.RunNarrativeAsync(_userInput, token);
-        }
-        catch (OperationCanceledException)
-        {
-            _log.Add("[canceled]");
-        }
-        finally
-        {
-            _isRunning = false;
-            _cts.Dispose();
-            _cts = new CancellationTokenSource();
-        }
-    }
+    //private async Task RunAsync()
+    //{
+    //    if (_isRunning) return;
+    //    _isRunning = true;
+    //    try
+    //    {
+    //        var token = _cts.Token;
+    //        await NarrativeOrchestration.RunNarrativeAsync(token);
+    //    }
+    //    catch (OperationCanceledException)
+    //    {
+    //        _log.Add("[canceled]");
+    //    }
+    //    finally
+    //    {
+    //        _isRunning = false;
+    //        _cts.Dispose();
+    //        _cts = new CancellationTokenSource();
+    //    }
+    //}
 
     private void Cancel()
     {
@@ -64,7 +64,7 @@ public partial class NarrativeZooPage : ComponentBase, IDisposable
 
     public void Dispose()
     {
-        NarrativeOrchestration.WriteAgentChatMessage -= OnAgentMessage;
+        //NarrativeOrchestration.WriteAgentChatMessage -= OnAgentMessage;
         _cts.Cancel();
         _cts.Dispose();
     }

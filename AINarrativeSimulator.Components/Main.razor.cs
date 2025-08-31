@@ -1,7 +1,7 @@
-﻿using AINarrativeSimulator.Components.Models;
-using Blazored.LocalStorage;
+﻿using Blazored.LocalStorage;
 using GptOssHackathonPocs.Narrative.Core;
 using GptOssHackathonPocs.Narrative.Core.Models;
+using Markdig;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Identity.Client;
 using Microsoft.JSInterop;
@@ -10,8 +10,8 @@ namespace AINarrativeSimulator.Components;
 
 public partial class Main
 {
-    private List<WorldAgentAction> actions = [];
-    private List<WorldAgent> agents = [];
+    private List<WorldAgentAction> _actions = [];
+    private List<WorldAgent> _agents = [];
 
     [Inject]
     private WorldState WorldState { get; set; } = default!;
@@ -30,6 +30,38 @@ public partial class Main
 
     private bool _showWorldController = true;
 
+    // Summary modal state
+    private bool _showSummaryModal = false;
+    private bool _isSummarizing = false;
+    private string _summary = "";
+
+    private async Task OpenSummaryModal()
+    {
+        _showSummaryModal = true;
+        _isSummarizing = true;
+        _summary = string.Empty;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            _summary = await NarrativeOrchestration.SummarizeCurrentWorldState();
+        }
+        catch (Exception ex)
+        {
+            _summary = $"Error generating summary: {ex.Message}";
+        }
+        finally
+        {
+            _isSummarizing = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private Task CloseSummaryModal()
+    {
+        _showSummaryModal = false;
+        return InvokeAsync(StateHasChanged);
+    }
+
     private async Task ToggleWorldPanel()
     {
         _showWorldController = !_showWorldController;
@@ -44,8 +76,7 @@ public partial class Main
 
     protected override void OnInitialized()
     {
-        WorldState.PropertyChanged += HandleWorldStatePropertyChanged;
-        NarrativeOrchestration.WriteAgentChatMessage += HandleAgentChatMessageWritten;
+        
         // Optional: seed with an example location so WorldController has content to render gracefully
         //WorldState.Locations["square"] = new LocationState
         //{
@@ -56,18 +87,49 @@ public partial class Main
         //};
     }
 
+    private async Task GenerateSummary()
+    {
+        _isSummarizing = true;
+        _summary = string.Empty;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            _summary = await NarrativeOrchestration.SummarizeCurrentWorldState();
+        }
+        catch (Exception ex)
+        {
+            _summary = $"Error generating summary: {ex.Message}";
+        }
+        finally
+        {
+            _isSummarizing = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
+            WorldState.PropertyChanged += HandleWorldStatePropertyChanged;
+            NarrativeOrchestration.WriteAgentChatMessage += HandleAgentChatMessageWritten;
             _module = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/AINarrativeSimulator.Components/resizableGrid.js");
             await _module.InvokeVoidAsync("initResizableGrid", _grid);
         }
     }
 
-    private void HandleAgentChatMessageWritten(string obj)
+    private void HandleAgentChatMessageWritten(string chatMessage, string agent)
     {
-        WorldState.AddRecentAction(new WorldAgentAction(){Type = ActionType.Decide, Details = obj, Timestamp = DateTime.Now});
+        if (chatMessage.Contains("Oh, shit!"))
+        {
+            WorldState.AddRecentAction(new WorldAgentAction()
+            {
+                Type = ActionType.Error, ActingAgent = agent,
+                BriefDescription = $"Error occurred before {agent} Finished their action !", Details = chatMessage,
+                Timestamp = DateTime.Now
+            });
+            return;
+        }
+        WorldState.AddRecentAction(new WorldAgentAction() { Type = ActionType.None, ActingAgent = agent, BriefDescription = $"{agent} Finished their action and has something to say!", Details = chatMessage, Timestamp = DateTime.Now });
     }
 
     private async void HandleWorldStatePropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -77,12 +139,12 @@ public partial class Main
             switch (e.PropertyName)
             {
                 case nameof(WorldState.WorldAgents):
-                    agents = WorldState.WorldAgents.Agents;
+                    _agents = WorldState.WorldAgents.Agents;
                     await LocalStorage.SetItemAsync($"agents-{DateTime.Now:hh:mm:ss}", WorldState.WorldAgents);
                     await InvokeAsync(StateHasChanged);
                     break;
                 case nameof(WorldState.RecentActions):
-                    actions = WorldState.RecentActions;
+                    _actions = WorldState.RecentActions;
                     await InvokeAsync(StateHasChanged);
                     break;
             }
@@ -112,7 +174,7 @@ public partial class Main
     private void HandleReset()
     {
         HandleStop();
-        actions.Clear();
+        _actions.Clear();
         selectedAgentId = null;
         // Keep agents/worldState as-is (host app could bind to these later)
         StateHasChanged();
@@ -122,9 +184,10 @@ public partial class Main
     {
         _rumor += "\nRumor: " + rumor;
         WorldState.Rumors.Add(rumor);
-        actions.Add(new WorldAgentAction()
+        _actions.Add(new WorldAgentAction()
         {
-            Type = ActionType.SpeakTo,
+            BriefDescription = "A rumor has been injected into the world",
+            Type = ActionType.None,
             Target = "public",
             Details = rumor,
             Timestamp = DateTime.Now
@@ -136,8 +199,9 @@ public partial class Main
     {
         _rumor += "\nEvent: " + evt;
         WorldState.GlobalEvents.Add(evt);
-        actions.Add(new WorldAgentAction
+        _actions.Add(new WorldAgentAction
         {
+            BriefDescription = "A world event has been injected into the world",
             Type = ActionType.Discover,
             Target = "public",
             Details = evt,
@@ -145,7 +209,12 @@ public partial class Main
         });
         StateHasChanged();
     }
-
+    private static string MarkdownAsHtml(string markdownString)
+    {
+        var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
+        var result = Markdown.ToHtml(markdownString, pipeline);
+        return result;
+    }
     private Task OnSelectedAgentChanged(string id)
     {
         selectedAgentId = id;

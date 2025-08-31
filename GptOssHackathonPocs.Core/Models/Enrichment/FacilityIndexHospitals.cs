@@ -11,7 +11,7 @@ namespace GptOssHackathonPocs.Core.Models.Enrichment
     public sealed class FacilityIndexHospitals(
         HttpClient http,
         string layerUrl =
-            "https://services7.arcgis.com/RtX7tFjxuxerbFfd/arcgis/rest/services/HospitalsHospitals/FeatureServer/0")
+            "https://services2.arcgis.com/FiaPA4ga0iQKduv3/arcgis/rest/services/Hospitals/FeatureServer/0")
         : IFacilityIndex
     {
         private readonly string _layerUrl = layerUrl.TrimEnd('/');
@@ -24,12 +24,22 @@ namespace GptOssHackathonPocs.Core.Models.Enrichment
             if (g is null || g.IsEmpty) throw new Exception("Geometry is null");
 
             var env = g.EnvelopeInternal;
+            var geometryObj = new
+            {
+                xmin = env.MinX,
+                ymin = env.MinY,
+                xmax = env.MaxX,
+                ymax = env.MaxY,
+                spatialReference = new { wkid = 4326 }
+            };
+            var geometryJson = JsonSerializer.Serialize(geometryObj);
+
             var qs = new Dictionary<string, string>
             {
                 ["f"] = "json",
                 ["where"] = "1=1",
                 ["geometryType"] = "esriGeometryEnvelope",
-                ["geometry"] = $"{env.MinX},{env.MinY},{env.MaxX},{env.MaxY}",
+                ["geometry"] = geometryJson,
                 ["inSR"] = "4326",
                 ["spatialRel"] = "esriSpatialRelIntersects",
                 ["returnGeometry"] = "false",
@@ -42,7 +52,10 @@ namespace GptOssHackathonPocs.Core.Models.Enrichment
             using var resp = await http.GetAsync(url, ct);
             resp.EnsureSuccessStatusCode();
 
-            using var doc = await JsonDocument.ParseAsync(await resp.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
+            var readAsStreamAsync = await resp.Content.ReadAsStringAsync(ct);
+            Console.WriteLine($"Facility Response: {readAsStreamAsync}");
+            using var doc = JsonDocument.Parse(readAsStreamAsync);
+
             if (!doc.RootElement.TryGetProperty("features", out var feats) || feats.GetArrayLength() == 0)
                 return [];
 
@@ -50,11 +63,11 @@ namespace GptOssHackathonPocs.Core.Models.Enrichment
             foreach (var f in feats.EnumerateArray())
             {
                 var a = f.GetProperty("attributes");
-                string name = GetStr(a, "NAME") ?? "Hospital";
-                string city = GetStr(a, "CITY");
-                string state = GetStr(a, "STATE");
-                string type = GetStr(a, "TYPE");
-                string beds = a.TryGetProperty("BEDS", out var bd) && bd.ValueKind == JsonValueKind.Number
+                var name = GetStr(a, "NAME") ?? "Hospital";
+                var city = GetStr(a, "CITY");
+                var state = GetStr(a, "STATE");
+                var type = GetStr(a, "TYPE");
+                var beds = a.TryGetProperty("BEDS", out var bd) && bd.ValueKind == JsonValueKind.Number
                                 ? bd.GetDouble().ToString("0") : "";
 
                 var parts = new List<string> { name };

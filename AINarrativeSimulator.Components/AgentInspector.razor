@@ -19,7 +19,8 @@
                 @foreach (var agent in Agents)
                 {
                     var isSel = SelectedAgentId == agent.AgentId;
-                    <div class="agent-item @(isSel ? "selected" : null)"
+                    var isLastUpdated = _lastUpdatedAgentId == agent.AgentId;
+                    <div class="agent-item @(isSel ? "selected" : null) @(isLastUpdated ? "last-updated" : null)"
                          @onclick="() => SelectAgentAsync(agent.AgentId)">
                         <div class="agent-item-head">
                             <div class="id">@agent.AgentId</div>
@@ -55,7 +56,7 @@
                 </div>
 
                 <div class="tabs">
-                    @foreach (var tab in new[]{"overview","relationships","memories","goals"})
+                    @foreach (var tab in new[] { "overview", "relationships", "memories", "goals" })
                     {
                         var isActive = _activeTab == tab;
                         <button class="tab @(isActive ? "active" : null)"
@@ -72,19 +73,13 @@
                             <div>
                                 <h4>Personality</h4>
                                 <div class="chips">
-                                    @foreach (var t in Current.StaticTraits.Personality)
-                                    {
-                                        <span class="chip">@t</span>
-                                    }
+                                    <span class="chip">@Current.StaticTraits.PersonalityTraits</span>
                                 </div>
                             </div>
                             <div>
                                 <h4>Core Values</h4>
                                 <div class="chips">
-                                    @foreach (var v in Current.StaticTraits.CoreValues)
-                                    {
-                                        <span class="chip">@v</span>
-                                    }
+                                    <span class="chip">@Current.StaticTraits.CoreValues</span>
                                 </div>
                             </div>
                             <div>
@@ -104,7 +99,7 @@
                                 <div class="rel-card">
                                     <div class="rel-head">
                                         <div class="name">@rel.Name</div>
-                                        <div class="trust @TrustText(rel.Details.Trust / 10.0)">Trust: @((rel.Details.Trust/10.0).ToString("0.0"))</div>
+                                        <div class="trust @TrustText(rel.Details.Trust / 10.0)">Trust: @((rel.Details.Trust / 10.0).ToString("0.0"))</div>
                                     </div>
                                     <p class="rel-summary">Type: @rel.Details.Type</p>
                                     @if (!string.IsNullOrWhiteSpace(rel.Details.Notes))
@@ -118,7 +113,7 @@
                     else if (_activeTab == "memories")
                     {
                         <div class="section">
-                            @foreach (var m in Current.KnowledgeMemory.KeyMemories)
+                            @foreach (var m in Current.KnowledgeMemory.RecentMemories)
                             {
                                 <div class="mem-card">
                                     <div class="mem-head">

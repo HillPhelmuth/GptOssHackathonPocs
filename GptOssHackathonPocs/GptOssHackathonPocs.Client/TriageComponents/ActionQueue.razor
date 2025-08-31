@@ -25,17 +25,8 @@
                             {
                                 <span class="aq-badge aq-badge-danger aq-ms-2">@badge</span>
                             }
-                            <div class="aq-text-muted aq-text-sm">@it.Rationale</div>
-
-                            @* Floating toggle button to show/hide details *@
-                            <div class="aq-details-container">
-                                @if (IsExpanded(it))
-                                {
-                                    <div class="aq-details">
-                                        <h5>Details</h5>
-                                        <div style="padding:.8rem">@((MarkupString)MarkdownAsHtml(it.FullMarkdown))</div>
-                                    </div>
-                                }
+                            <div class="aq-text-muted aq-text-sm" style="position:relative">
+                                @it.Rationale
                                 <button type="button"
                                         class="aq-toggle"
                                         aria-expanded="@IsExpanded(it)"
@@ -52,6 +43,19 @@
                                         }
                                     </span>
                                 </button>
+                            </div>
+
+                            @* Floating toggle button to show/hide details *@
+                            <div class="aq-details-container">
+
+                                @if (IsExpanded(it))
+                                {
+                                    <div class="aq-details">
+                                        <h5>Details</h5>
+                                        <div style="padding:.8rem">@((MarkupString)MarkdownAsHtml(it.FullMarkdown))</div>
+                                    </div>
+                                }
+
                             </div>
                         </div>
                         <div>

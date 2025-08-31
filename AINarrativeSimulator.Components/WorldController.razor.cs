@@ -1,5 +1,4 @@
-﻿using AINarrativeSimulator.Components.Models;
-using GptOssHackathonPocs.Narrative.Core;
+﻿using GptOssHackathonPocs.Narrative.Core;
 using Microsoft.AspNetCore.Components;
 
 namespace AINarrativeSimulator.Components;
@@ -20,20 +19,20 @@ public partial class WorldController
 
     private readonly string[] presetRumors =
     [
-        "Strange lights were seen near the old mine last night",
-        "Someone found an old journal hidden in the library basement",
-        "The mining company executives are planning to return to town",
-        "A mysterious figure was spotted walking through the town square at midnight",
-        "Old Mr. Henderson's diary mentions a secret passage in the mine"
+        "Dock crews whisper the Overseer AI throttled power to favor Asterion bays",
+        "Phase jitter was spotted around the siphon array at the Terraforming Yard",
+        "Security quietly pulled contraband augments from the Cybernetic Atelier",
+        "A sealed log in the Derelict Archive mentions a hidden armistice clause",
+        "Nebula Cantina regulars say an underlevel courier holds corporate access codes"
     ];
 
     private readonly string[] presetEvents =
     [
-        "A sudden thunderstorm rolls in over Pineharbor",
-        "The town's power goes out for several hours",
-        "A stranger arrives on the evening train",
-        "The old mine entrance gate is found open",
-        "A time capsule is discovered during construction work"
+        "Micro-meteor sandblast forces pressure-door inspections across the Docking Ring",
+        "Stationwide power ration drops as the Command Spire diverts load to the siphon array",
+        "Licensed protest fills the Agora Concourse over priority berths; Security sets de-escalation lines",
+        "Xenomed Bay issues a contamination alert; Biofab initiates a quiet reagent recall",
+        "Quantum Research Lab reports a jitter spike near the Terraforming Yard; build paused for mitigation"
     ];
 
     private async Task HandleInjectRumorAsync()

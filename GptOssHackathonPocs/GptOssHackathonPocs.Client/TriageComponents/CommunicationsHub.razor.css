@@ -1,11 +1,11 @@
 /* Card */
-.comm-card{background:#fff;border:1px solid #dee2e6;border-radius:.5rem}
-.comm-card-header{padding:.5rem .75rem;border-bottom:1px solid #dee2e6;border-top-left-radius:.5rem;border-top-right-radius:.5rem}
-.comm-card-body{padding:.75rem}
+.comm-card{background:#111827;border:1px solid #374151;border-radius:.5rem;color:#e5e7eb}
+.comm-card-header{padding:.75rem 1rem;border-bottom:1px solid #374151;border-top-left-radius:.5rem;border-top-right-radius:.5rem}
+.comm-card-body{padding:1rem}
 
 /* Typography */
 .comm-text-sm{font-size:.875rem}
-.comm-text-muted{color:#6c757d}
+.comm-text-muted{color:#9ca3af}
 .comm-fw-semibold{font-weight:600}
 
 /* Grid */
@@ -16,12 +16,12 @@
 .comm-grid-block{display:grid}
 
 /* Buttons */
-.comm-btn{display:inline-block;padding:.375rem .75rem;border-radius:.375rem;border:1px solid transparent;background:#0d6efd;color:#fff;cursor:pointer;text-align:left}
-.comm-btn:hover{filter:brightness(1.05)}
-.comm-btn-outline{background:transparent;color:#6c757d;border-color:#6c757d}
-.comm-btn-outline:hover{background:#f8f9fa}
-.comm-btn-light{background:#f8f9fa;color:#212529;border-color:#dee2e6}
-.comm-border{border:1px solid #dee2e6}
+.comm-btn{display:inline-block;padding:.375rem .75rem;border-radius:.375rem;border:1px solid #374151;background:#1f2937;color:#e5e7eb;cursor:pointer;text-align:left}
+.comm-btn:hover{border-color:#4b5563;color:#fff}
+.comm-btn-outline{background:transparent;color:#9ca3af;border-color:#4b5563}
+.comm-btn-outline:hover{background:#111827;color:#e5e7eb}
+.comm-btn-light{background:#1f2937;color:#e5e7eb;border-color:#374151}
+.comm-border{border:1px solid #374151}
 
 .comm-channel{width:100%;text-align:left}
 .comm-quick{text-align:left}

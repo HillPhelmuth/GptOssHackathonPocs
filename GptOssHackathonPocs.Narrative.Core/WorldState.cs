@@ -15,6 +15,7 @@ public class WorldState : INotifyPropertyChanged
     private WorldAgent? _activeWorldAgent;
     private List<WorldAgentAction> _recentActions = [];
     public event PropertyChangedEventHandler? PropertyChanged;
+    public event Action<string>? LastAgentUpdated;
 
     public WorldAgents WorldAgents
     {
@@ -35,7 +36,7 @@ public class WorldState : INotifyPropertyChanged
     public List<string> GlobalEvents { get; set; } = [];
     public List<string> Rumors { get; set; } = [];
     public string CurrentTime { get; set; } = DateTime.Now.ToString("t");
-    public Dictionary<PineharborLocation, string> Locations => EnumHelpers.AllEnumDescriptions<PineharborLocation>();
+    public Dictionary<VesperaLocation, string> Locations => EnumHelpers.AllEnumDescriptions<VesperaLocation>();
 
     public List<WorldAgentAction> RecentActions
     {
@@ -45,17 +46,68 @@ public class WorldState : INotifyPropertyChanged
     public void AddRecentAction(WorldAgentAction action)
     {
         _recentActions.Insert(0, action);
-        if (_recentActions.Count > 20)
+        if (_recentActions.Count > 50)
         {
             _recentActions.RemoveAt(_recentActions.Count - 1);
         }
         OnPropertyChanged(nameof(RecentActions));
+    }
+
+    public string WorldStateMarkdown()
+    {
+        // Markdown representation of the world state including RecentActions, GlobalEvents, and Rumors
+        var sb = new StringBuilder();
+        sb.AppendLine("## World State");
+        sb.AppendLine($"- **Current Time:** {CurrentTime}");
+        sb.AppendLine();
+        sb.AppendLine("### Global Events");
+        if (GlobalEvents.Count != 0)
+        {
+            foreach (var evt in GlobalEvents)
+            {
+                sb.AppendLine($"- {evt}");
+            }
+        }
+        else
+        {
+            sb.AppendLine("- None");
+        }
+        sb.AppendLine();
+        sb.AppendLine("### Rumors");
+        if (Rumors.Count != 0)
+        {
+            foreach (var rumor in Rumors)
+            {
+                sb.AppendLine($"- {rumor}");
+            }
+        }
+        else
+        {
+            sb.AppendLine("- None");
+        }
+        sb.AppendLine();
+        sb.AppendLine("### Recent Actions");
+        if (RecentActions.Count != 0)
+        {
+            foreach (var action in RecentActions.Where(w => w.Type != ActionType.Error).TakeLast(15))
+            {
+                var (type, details) = action.ToTypeMarkdown();
+                sb.AppendLine($"- **{type}**");
+                sb.AppendLine(details);
+            }
+        }
+        else
+        {
+            sb.AppendLine("- None");
+        }
+        return sb.ToString();
     }
     public void UpdateAgent(WorldAgent agent)
     {
         var matchedAgent = WorldAgents.Agents.FirstOrDefault(a => a.AgentId == agent.AgentId);
         matchedAgent.DynamicState = agent.DynamicState;
         matchedAgent.KnowledgeMemory = agent.KnowledgeMemory;
+        LastAgentUpdated?.Invoke(agent.AgentId);
         OnPropertyChanged(nameof(WorldAgents));
     }
     protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)

@@ -14,6 +14,10 @@ namespace GptOssHackathonPocs.Narrative.Core.Models;
 [Description("Represents a world agent action, including type, target, and optional details.")]
 public class WorldAgentAction
 {
+    [JsonIgnore]
+    public string? ActingAgent { get; set; }
+    [JsonIgnore]
+    public string? BriefDescription { get; set; }
     /// <summary>
     /// The kind of action to perform.
     /// </summary>
@@ -35,7 +39,7 @@ public class WorldAgentAction
     [JsonPropertyName("details")]
     public required string Details { get; set; } // e.g., what to say or decide
 
-    public DateTime Timestamp { get; set; }
+    public DateTime Timestamp { get; set; } = DateTime.Now;
 
     public (ActionType, string) ToTypeMarkdown()
     {
@@ -49,7 +53,20 @@ public class WorldAgentAction
         return (Type, sb.ToString());
     }
 }
-
+public class UpdateAgentStateRequest
+{
+    [Description("Description of the update")]
+    public required string Description { get; set; }
+    [Description("The updated agent dynamic state")]
+    public required DynamicState UpdatedDynamicState { get; set; }
+}
+public class UpdateAgentMemoryRequest
+{
+    [Description("Description of the update")]
+    public required string Description { get; set; }
+    [Description("The updated agent knowledge memory and relationships")]
+    public required KnowledgeMemory UpdatedKnowledgeMemory { get; set; }
+}
 /// <summary>
 /// Enumerates the possible world agent actions.
 /// </summary>
@@ -57,136 +74,135 @@ public class WorldAgentAction
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum ActionType
 {
-    /// <summary>
-    /// Speak to a target character.
-    /// </summary>
+    None,
+    Error,
     [Description("Speak to a target character.")]
     SpeakTo,
-
-    /// <summary>
-    /// Move to a target location.
-    /// </summary>
     [Description("Move to a target location.")]
     MoveTo,
-
-    /// <summary>
-    /// Make a decision without direct interaction with a specific target.
-    /// </summary>
     [Description("Make a decision (no direct target interaction required).")]
     Decide,
-    [Description("Express an emotion or reaction.")]
-    Emote,
     [Description("Discover something new in the environment.")]
     Discover,
+    [Description("Trade or purchase items from a target.")]
+    Purchase,
+    [Description("Engage in a combat or hostile action.")]
+    Attack,
+    [Description("Defend against an attack or threat.")]
+    Defend,
+    [Description("Flee from a dangerous situation or threat.")]
+    Flee,
+    [Description("Undermine or sabotage a target.")]
+    Undermine,
 }
 /// <summary>
-/// Represents the primary, top-level locations within the world of Pineharbor.
+/// Represents the primary, top-level locations within the world of Vespera.
 /// </summary>
-[Description("Primary, top-level locations within Pineharbor.")]
+[Description("Primary, top-level locations within Vespera.")]
 [JsonConverter(typeof(JsonStringEnumConverter))]
-public enum PineharborLocation
+public enum VesperaLocation
 {
     /// <summary>
-    /// Town Hall of Pineharbor.
+    /// Central command spire of Vespera Station, home to the Overseer AI and war room.
     /// </summary>
-    [Description("Town Hall of Pineharbor.")]
-    TownHall,
+    [Description("Central command spire of Vespera Station, home to the Overseer AI and war room.")]
+    CommandSpire,
 
     /// <summary>
-    /// Public pier and docks.
+    /// Primary orbital docking ring for starships; customs and cargo cranes hum day and night-cycle.
     /// </summary>
-    [Description("Public pier and docks.")]
-    Pier,
+    [Description("Primary orbital docking ring for starships; customs and cargo cranes hum day and night-cycle.")]
+    DockingRing,
 
     /// <summary>
-    /// The local medical clinic.
+    /// Advanced xenomedical bay specializing in multi-species trauma and nano-surgery.
     /// </summary>
-    [Description("Local medical clinic.")]
-    Clinic,
+    [Description("Advanced xenomedical bay specializing in multi-species trauma and nano-surgery.")]
+    XenomedBay,
 
     /// <summary>
-    /// The town's high school.
+    /// Cadet academy where pilots, navigators, and tacticians are forged.
     /// </summary>
-    [Description("The town's high school.")]
-    HighSchool,
+    [Description("Cadet academy where pilots, navigators, and tacticians are forged.")]
+    CadetAcademy,
 
     /// <summary>
-    /// Auto repair garage.
+    /// Heavy mech hangar and drone maintenance bay for exo-frames and hull crawlers.
     /// </summary>
-    [Description("Auto repair garage.")]
-    Garage,
+    [Description("Heavy mech hangar and drone maintenance bay for exo-frames and hull crawlers.")]
+    MechHangar,
 
     /// <summary>
-    /// Local cafe.
+    /// Neon-lit cantina favored by smugglers, couriers, and off-shift riggers.
     /// </summary>
-    [Description("Local cafe.")]
-    Cafe,
+    [Description("Neon-lit cantina favored by smugglers, couriers, and off-shift riggers.")]
+    NebulaCantina,
 
     /// <summary>
-    /// Sheriff's Office and holding cells.
+    /// Station security precinct with holding cells and a pervasive surveillance hub.
     /// </summary>
-    [Description("Sheriff's Office.")]
-    SheriffsOffice,
+    [Description("Station security precinct with holding cells and a pervasive surveillance hub.")]
+    SecurityPrecinct,
 
     /// <summary>
-    /// Shipwreck Museum.
+    /// Archive of derelicts and relics from lost expeditions, curated by void-salvagers.
     /// </summary>
-    [Description("Shipwreck Museum.")]
-    ShipwreckMuseum,
+    [Description("Archive of derelicts and relics from lost expeditions, curated by void-salvagers.")]
+    DerelictArchive,
 
     /// <summary>
-    /// Marine research station.
+    /// Quantum anomalies research lab pushing at the edges of time and causality.
     /// </summary>
-    [Description("Marine research station.")]
-    ResearchStation,
+    [Description("Quantum anomalies research lab pushing at the edges of time and causality.")]
+    QuantumResearchLab,
 
     /// <summary>
-    /// Gazette newspaper office.
+    /// HoloPress bureau broadcasting systemwide feeds and encrypted whistlecasts.
     /// </summary>
-    [Description("Gazette newspaper office.")]
-    GazetteOffice,
+    [Description("HoloPress bureau broadcasting systemwide feeds and encrypted whistlecasts.")]
+    HoloPressBureau,
 
     /// <summary>
-    /// Local pharmacy.
+    /// Biofabrication dispensary for gene-meds, nano-tonics, and custom antigens.
     /// </summary>
-    [Description("Local pharmacy.")]
-    Pharmacy,
+    [Description("Biofabrication dispensary for gene-meds, nano-tonics, and custom antigens.")]
+    BiofabDispensary,
 
     /// <summary>
-    /// Active construction site.
+    /// Active assembly yard for terraforming modules and prefabs bound for frontier worlds.
     /// </summary>
-    [Description("Active construction site.")]
-    ConstructionSite,
+    [Description("Active assembly yard for terraforming modules and prefabs bound for frontier worlds.")]
+    TerraformingYard,
 
     /// <summary>
-    /// Artisan craft shop.
+    /// Cybernetic atelier crafting bespoke augments and sensate synth-sculptures.
     /// </summary>
-    [Description("Artisan craft shop.")]
-    CraftShop,
+    [Description("Cybernetic atelier crafting bespoke augments and sensate synth-sculptures.")]
+    CyberneticAtelier,
 
     /// <summary>
-    /// Local pub.
+    /// Starlight taproom pouring comet-ice brews and vacuum-aged spirits.
     /// </summary>
-    [Description("Local pub.")]
-    Pub,
+    [Description("Starlight taproom pouring comet-ice brews and vacuum-aged spirits.")]
+    StarlightTaproom,
 
     /// <summary>
-    /// Fish processing facility.
+    /// Protein vatworks where algae and myco-cultures become ration bricks and gourmet gels.
     /// </summary>
-    [Description("Fish processing facility.")]
-    FishProcessing,
+    [Description("Protein vatworks where algae and myco-cultures become ration bricks and gourmet gels.")]
+    ProteinVatworks,
 
     /// <summary>
-    /// Community center for events and gatherings.
+    /// Grand agora concourse for markets, rallies, and stationwide assemblies.
     /// </summary>
-    [Description("Community center for events and gatherings.")]
-    CommunityCenter,
+    [Description("Grand agora concourse for markets, rallies, and stationwide assemblies.")]
+    AgoraConcourse,
 
     /// <summary>
-    /// Alley located in the downtown area.
+    /// Shadowed underlevel conduit threading maintenance shafts and forgotten bulkheads.
     /// </summary>
-    [Description("Alley located in the downtown area.")]
-    DowntownAlley
+    [Description("Shadowed underlevel conduit threading maintenance shafts and forgotten bulkheads.")]
+    UnderlevelConduit
 }
 public static class EnumHelpers
 {

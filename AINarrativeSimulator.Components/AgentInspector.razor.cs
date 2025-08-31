@@ -1,4 +1,4 @@
-﻿using AINarrativeSimulator.Components.Models;
+﻿using GptOssHackathonPocs.Narrative.Core;
 using GptOssHackathonPocs.Narrative.Core.Models;
 using Microsoft.AspNetCore.Components;
 
@@ -11,6 +11,21 @@ public partial class AgentInspector
     [Parameter] public EventCallback<string> SelectedAgentIdChanged { get; set; }
     [Parameter] public string? Class { get; set; }
     private string _activeTab = "overview"; // overview | relationships | memories | goals
+    [Inject]
+    private WorldState WorldStateService { get; set; } = default!;
+
+    private string _lastUpdatedAgentId = "";
+
+    protected override Task OnInitializedAsync()
+    {
+        WorldStateService.LastAgentUpdated += HandleLastAgentUpdated;
+        return base.OnInitializedAsync();
+    }
+
+    private void HandleLastAgentUpdated(string obj)
+    {
+        _lastUpdatedAgentId = obj;
+    }
 
     private WorldAgent? Current => string.IsNullOrWhiteSpace(SelectedAgentId)
         ? null
@@ -41,6 +56,7 @@ public partial class AgentInspector
         Mood.Measured => "text-slate-400 bg-slate-500-20",
         Mood.Energetic => "text-green-500 bg-green-500-20",
         Mood.Restless => "text-purple-400 bg-purple-500-20",
+        Mood.Violent => "text-red-600 bg-red-500-20",
         _ => "text-gray-400 bg-gray-500-20"
     };
 

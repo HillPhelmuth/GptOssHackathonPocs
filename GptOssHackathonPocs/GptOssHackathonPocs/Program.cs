@@ -2,6 +2,7 @@ using Blazored.LocalStorage;
 using GptOssHackathonPocs;
 using GptOssHackathonPocs.Components;
 using GptOssHackathonPocs.Core;
+using GptOssHackathonPocs.Core.Hubs;
 using GptOssHackathonPocs.Core.Models.Enrichment;
 using GptOssHackathonPocs.Core.Services;
 using GptOssHackathonPocs.Narrative.Core;
@@ -13,6 +14,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
+builder.Services.AddSignalR(o =>
+{
+    o.MaximumReceiveMessageSize = null;
+});
 builder.Services.AddHttpClient("nws", c =>
 {
     c.DefaultRequestHeaders.UserAgent.ParseAdd("TriageCopilot/0.1 (+your-email@example.com)");
@@ -25,9 +30,9 @@ builder.Services.AddSingleton<IIncidentFeed, NhcStormsFeed>();
 builder.Services.AddSingleton<IIncidentFeed, FirmsActiveFiresFeed>();
 builder.Services.AddSingleton<IncidentAggregator>();
 builder.Services.AddTriageEnrichment();
-builder.Services.AddHttpClient<WorldPopPopulationIndex>();
+//builder.Services.AddHttpClient<WorldPopPopulationIndex>();
 //builder.Services.AddSingleton(await EarthEngineRestClient.CreateAsync("openaiosshackathonEarth", @"C:\Users\adamh\source\repos\GptOssHackathonPocs\GptOssHackathonPocs.Core\searchwithsemantickernel-a3b6f34079f4.json"));
-builder.Services.AddSingleton<IPopulationIndex, WorldPopPopulationIndex>();
+//builder.Services.AddSingleton<IPopulationIndex, WorldPopPopulationIndex>();
 // Narrative services
 builder.Services.AddSingleton<WorldState>();
 builder.Services.AddScoped<AiAgentOrchestration>();
@@ -76,5 +81,5 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddInteractiveWebAssemblyRenderMode()
     .AddAdditionalAssemblies(typeof(GptOssHackathonPocs.Client._Imports).Assembly);
-
+app.MapHub<ActionPlansHub>("/actionPlans");
 app.Run();
