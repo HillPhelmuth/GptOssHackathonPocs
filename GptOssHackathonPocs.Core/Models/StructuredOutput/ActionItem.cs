@@ -3,7 +3,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using GptOssHackathonPocs.Core.Models.Enrichment;
 
-namespace GptOssHackathonPocs.Core.Models;
+namespace GptOssHackathonPocs.Core.Models.StructuredOutput;
 
 [Description("Represents an actionable task for a specific incident, including rationale, supporting evidence, required tools, priority, audience, and optional parameters.")]
 public sealed class ActionItem
@@ -28,8 +28,17 @@ public sealed class ActionItem
     public required string[] EvidenceLabels { get; set; }
 
     [JsonPropertyName("required_tools")]
-    [Description("List of tool identifiers required to execute this action. options are Slack/Teams message, SMS alerts, emails, WEA public alert, Field op radio dispatch and Push Notifications ")]
-    public required string[] RequiredTools { get; set; }
+    [Description("""
+                 List of tool identifiers required to execute this action. options are 
+                 - `Slack`,
+                 - `SmsText`,
+                 - `SmsVoice`,
+                 - `Email`,
+                 - `WeaPublicAlert`,
+                 - `FieldOpRadioDispatch`,
+                 - `PushNotifications`
+                 """)]
+    public required AvailableTools[] RequiredTools { get; set; }
 
     [JsonPropertyName("priority")]
     [Description("Action priority. Expected values: urgent, high, normal, or low.")]
@@ -58,11 +67,12 @@ public sealed class ActionItem
         sb.AppendLine($"- {LabelWithDesc(nameof(Description), nameof(Description))}: {Description}");
         sb.AppendLine($"- {LabelWithDesc("Rationale", nameof(Rationale))}: {Rationale}");
         sb.AppendLine($"- {LabelWithDesc("Evidence Labels", nameof(EvidenceLabels))}: {string.Join(", ", EvidenceLabels)}");
-        sb.AppendLine($"- {LabelWithDesc("Required Tools", nameof(RequiredTools))}: {string.Join(", ", RequiredTools)}");
+        sb.AppendLine($"- {LabelWithDesc("Required Tools", nameof(RequiredTools))}: {string.Join(", ", RequiredTools.Select(x => x.ToString()))}");
         sb.AppendLine($"- {LabelWithDesc("Priority", nameof(Priority))}: {Priority}");
         sb.AppendLine($"- {LabelWithDesc("Audience", nameof(Audience))}: {Audience}");
         sb.AppendLine($"- {LabelWithDesc("Severity Level", nameof(SeverityLevel))}: {SeverityLevel}");
-        
+        sb.AppendLine($"- {LabelWithDesc("Urgency Level", nameof(UrgencyLevel))}: {UrgencyLevel}");
+
         if (ActionSteps is { Count: > 0 })
         {
             sb.AppendLine($"- {LabelWithDesc("Required Steps", nameof(ActionSteps))}:");
@@ -87,4 +97,15 @@ public sealed class ActionItem
             return string.IsNullOrWhiteSpace(desc) ? label : $"{label} ({desc})";
         }
     }
+}
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum AvailableTools
+{
+    Slack,
+    SmsText,
+    SmsVoice,
+    Email,
+    WeaPublicAlert,
+    FieldOpRadioDispatch,
+    PushNotifications
 }

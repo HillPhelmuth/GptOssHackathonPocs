@@ -1,4 +1,5 @@
 using GptOssHackathonPocs.Core.Models;
+using GptOssHackathonPocs.Core.Models.StructuredOutput;
 using Microsoft.Extensions.Logging;
 
 namespace GptOssHackathonPocs.Core.Services.PublishActions;

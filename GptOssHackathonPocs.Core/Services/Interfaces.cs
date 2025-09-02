@@ -1,4 +1,5 @@
 using GptOssHackathonPocs.Core.Models;
+using GptOssHackathonPocs.Core.Models.StructuredOutput;
 
 namespace GptOssHackathonPocs.Core.Services;
 

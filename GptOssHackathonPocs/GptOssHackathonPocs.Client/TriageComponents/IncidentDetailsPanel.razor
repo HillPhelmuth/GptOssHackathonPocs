@@ -36,13 +36,13 @@
                     </div>
                 </div>
             </div>
-            @* <h6 class="mt-3">Critical Infrastructure at Risk</h6>
+            <h6 class="mt-3">Nearby Hospitals</h6>
             <div class="idp-flex idp-flex-wrap idp-gap-2">
                 @foreach (var tag in CriticalFacilities)
                 {
-                    <span class="idp-badge idp-badge-pill idp-badge-light idp-border">@tag</span>
+                    <span class="idp-badge idp-badge-pill idp-badge-light idp-border" @onclick="@(() => SelectHospital(tag))">@tag.ToString()</span>
                 }
-            </div> *@
+            </div>
         }
     </div>
 </div>

@@ -33,7 +33,7 @@
                 }
                 <div class="td-block-gap"></div>
                 @* <ActionQueue Items="@_queue" OnStatusChanged="OnActionStatusChanged" /> *@
-                <label>
+               @*  <label>
                     View Incident:
                     <select style="max-width:15rem" @onchange="HandleSelectChange">
                         @foreach (var inc in _incidents ?? [])
@@ -41,8 +41,8 @@
                             <option value="@inc.Id">@inc.Title</option>
                         }
                     </select>
-                </label>
-                <IncidentDetailsPanel Incident="@_selected" PopulationAffected="@(_selectedCard?.PopulationExposed ?? 0.0)" SviPercentile="@(_selectedCard?.SviPercentile ?? 0.0)"/>
+                </label> *@
+                <IncidentDetailsPanel Incident="@_selected" PopulationAffected="@(_selectedCard?.PopulationExposed ?? 0.0)" SviPercentile="@(_selectedCard?.SviPercentile ?? 0.0)" CriticalFacilities="@(_selectedCard?.NearbyHospitals ?? [])" OnHospitalSelected="HandleHospitalSelected"/>
             </div>
         </div>
         <div class="td-side">

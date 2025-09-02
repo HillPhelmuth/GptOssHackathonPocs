@@ -59,37 +59,3 @@ namespace GptOssHackathonPocs.Core.Models;
 //    }
 //}
 
-[Description("A collection of action items produced for one or more incidents.")]
-public sealed record ActionPlan
-{
-    
-
-    [Description("Renders the action plan into a human-readable Markdown string.")]
-    public string ToMarkdown()
-    {
-        var sb = new StringBuilder();
-        sb.AppendLine("# Action Plan");
-        foreach (var action in Actions)
-        {
-            sb.AppendLine(action.ToMarkdown());
-            sb.AppendLine();
-        }
-        return sb.ToString();
-    }
-
-    [JsonPropertyName("actionItems"), Description("The set of action items that comprise this plan.")]
-    public IEnumerable<ActionItem> Actions { get; set; }
-
-    
-}
-public class ActionStep
-{
-    [Description("Name of the step")]
-    public required string Name { get; set; }
-    [Description("Specific text instructions for carrying out the step")]
-    public required string Text { get; set; } 
-    [Description("Optional assignee for the step. Assignee is the person, entity or service responsible for taking the action step")]
-    public string? Assignee { get; set; }
-    [Description("Optional due date/time for the step")]
-    public DateTimeOffset? Due { get; set; }
-}

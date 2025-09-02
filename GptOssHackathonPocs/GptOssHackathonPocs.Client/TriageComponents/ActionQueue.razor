@@ -13,7 +13,7 @@
         else
         {
             var idx = 0;
-            foreach (var it in Items)
+            foreach (var it in Items.OrderByDescending(x => x.UrgencyLevel))
             {
                 idx++;
                 <div class="aq-list-item">

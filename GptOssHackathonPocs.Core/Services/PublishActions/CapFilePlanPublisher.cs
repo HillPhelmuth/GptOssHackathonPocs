@@ -1,5 +1,6 @@
 using System.Xml.Linq;
 using GptOssHackathonPocs.Core.Models;
+using GptOssHackathonPocs.Core.Models.StructuredOutput;
 using Microsoft.Extensions.Logging;
 
 namespace GptOssHackathonPocs.Core.Services.PublishActions;
@@ -16,6 +17,8 @@ public class CapFilePlanPublisher(ILogger<CapFilePlanPublisher> logger) : IPlanP
         logger.LogInformation("Wrote CAP 1.2 file to {Path}", path);
         return Task.CompletedTask;
     }
+
+    public string Channel { get; }
 
     private static XDocument BuildCap(ActionItem plan)
     {

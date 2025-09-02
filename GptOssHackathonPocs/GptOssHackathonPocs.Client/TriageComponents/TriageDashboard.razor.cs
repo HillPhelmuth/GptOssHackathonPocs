@@ -1,10 +1,13 @@
 using GptOssHackathonPocs.Core;
 using GptOssHackathonPocs.Core.Models;
 using GptOssHackathonPocs.Core.Models.Enrichment;
+using GptOssHackathonPocs.Core.Models.Publishing;
 using GptOssHackathonPocs.Core.Services;
 using Markdig;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using System.Text.Json;
+using GptOssHackathonPocs.Core.Models.StructuredOutput;
 
 namespace GptOssHackathonPocs.Client.TriageComponents;
 public partial class TriageDashboard
@@ -27,7 +30,10 @@ public partial class TriageDashboard
     private IncidentAggregator Aggregator { get; set; } = default!;
     [Inject]
     private NavigationManager Nav { get; set; } = default!;
-
+    [Inject]
+    private IJSRuntime JS { get; set; } = default!;
+    [Inject]
+    private ActionQueueState ActionQueue { get; set; } = default!;
     protected override async Task OnInitializedAsync()
     {
         
@@ -60,6 +66,8 @@ public partial class TriageDashboard
         {
             _selected = sel;
             _selectedCard = _cards.FirstOrDefault(c => c.IncidentId == sel.Id);
+            // Clear any selected hospital marker when changing incidents
+            _ = SafeClearHospitalAsync();
             StateHasChanged();
         }
     }
@@ -104,9 +112,10 @@ public partial class TriageDashboard
             if (action is null) continue;
             actions.Add(action);
             _queue.Add(new ActionQueue.ActionQueueItem(action.IncidentId ?? "", action.Title, action.Instructions, action.SeverityLevel, action.UrgencyLevel, action.ToMarkdown()));
-            InvokeAsync(StateHasChanged);
+            
+            await InvokeAsync(StateHasChanged);
         }
-
+        ActionQueue.SetSuggested(actions);
         var actionPlan = new ActionPlan { Actions = actions};
         _actionPlanMarkdown = actionPlan is null ? "### Error\n\nCould not generate action plan." : actionPlan.ToMarkdown();
         _isBusy = false;
@@ -118,6 +127,37 @@ public partial class TriageDashboard
         _cts = new CancellationTokenSource();
     }
 
+    private async Task HandleHospitalSelected(NearbyHospital hospital)
+    {
+        if (hospital is null) return;
+        try
+        {
+            await JS.InvokeVoidAsync("triageMap.showHospital",
+                hospital.Latitude,
+                hospital.Longitude,
+                hospital.Name,
+                hospital.City,
+                hospital.State,
+                hospital.Beds,
+                hospital.Type);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to show hospital on map: {ex.Message}");
+        }
+    }
+
+    private async Task SafeClearHospitalAsync()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("triageMap.clearHospital");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to clear hospital marker: {ex.Message}");
+        }
+    }
     private static string MarkdownAsHtml(string markdownString)
     {
         var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();

@@ -2,6 +2,7 @@
 using System.Text.Json;
 using GptOssHackathonPocs.Core.Models;
 using GptOssHackathonPocs.Core.Models.Enrichment;
+using GptOssHackathonPocs.Core.Models.StructuredOutput;
 using GptOssHackathonPocs.Core.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -49,17 +50,28 @@ public class AiAgentOrchestration(ILoggerFactory loggerFactory, IConfiguration c
         return kernel;
     }
 
+    private int tries = 0;
     public async IAsyncEnumerable<ActionItem?> PlanAsync(IEnumerable<IncidentCard> cards, [EnumeratorCancellation] CancellationToken ct = default)
     {
         var settings = new OpenAIPromptExecutionSettings()
         { ReasoningEffort = "high", ResponseFormat = typeof(ActionPlan), ChatSystemPrompt = SystemPrompt };
         var kernelArgs = new KernelArguments(settings) { ["cards"] = string.Join("\n---\n", cards.Select(x => x.ToMarkdown())) };
         var kernel = CreateKernel();
-        var result = await kernel.InvokePromptAsync<string>(UserPrompt, kernelArgs, cancellationToken: ct);
-        var actionPlan = JsonSerializer.Deserialize<ActionPlan>(result);
+        ActionPlan? actionPlan = null;
+        try
+        {
+            actionPlan = await GenerateActionPlanAsync();
+        }
+        catch
+        {
+            tries++;
+            _logger.LogWarning("Failed to generate ActionPlan on try {Try}", tries);
+            if (tries < 3)
+                actionPlan = await GenerateActionPlanAsync();
+        }
         if (actionPlan is null || !actionPlan.Actions.Any())
         {
-            _logger.LogError("Failed to deserialize ActionPlan from AI response: {Response}", result);
+            _logger.LogError("Failed to deserialize ActionPlan from AI response");
             yield break;
         }
         foreach (var action in actionPlan.Actions)
@@ -84,6 +96,12 @@ public class AiAgentOrchestration(ILoggerFactory loggerFactory, IConfiguration c
         //    _logger.LogError("Failed to deserialize ActionPlan from AI response: {Response}", actionPlan);
         //    return null;
         //}
+        async Task<ActionPlan?> GenerateActionPlanAsync()
+        {
+            var result = await kernel.InvokePromptAsync<string>(UserPrompt, kernelArgs, cancellationToken: ct);
+            var actionPlan1 = JsonSerializer.Deserialize<ActionPlan>(result);
+            return actionPlan1;
+        }
     }
     public async Task<ActionItem?> GenerateActionItemAsync(IncidentCard card, CancellationToken ct = default)
     {

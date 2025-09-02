@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using GptOssHackathonPocs.Core.Models;
+using GptOssHackathonPocs.Core.Models.StructuredOutput;
 using Microsoft.Extensions.Logging;
 
 namespace GptOssHackathonPocs.Core.Services.PublishActions;
@@ -26,4 +27,6 @@ public class SlackPlanPublisher(ILogger<SlackPlanPublisher> logger, IHttpClientF
             logger.LogWarning("Slack webhook returned {Status}: {Body}", resp.StatusCode, body);
         }
     }
+
+    public string Channel { get; }
 }

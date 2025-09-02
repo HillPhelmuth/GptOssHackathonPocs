@@ -74,16 +74,16 @@ public sealed class IncidentCardBuilder
             links.Add(new EvidenceLink(Label: $"{type}:{i.Id}", Url: i.Link!));
 
         return new IncidentCard(
-            IncidentId: i.Id,
-            Type: type,
-            Severity: sev,
-            Timestamp: i.Timestamp,
-            AdminAreas: adminNames.ToArray(),
-            PopulationExposed: sviData?.TotalPopulation ?? new Random().Next(0, 25000),
-            SviPercentile: sviData?.AverageSviPercentile ?? new Random().Next(1, 100)/100.0,
-            GeometryRef: geometryRef,
-            CriticalFacilities: facilities,
-            Sources: links.ToArray(),
+            incidentId: i.Id,
+            type: type,
+            severity: sev,
+            timestamp: i.Timestamp,
+            adminAreas: adminNames.ToArray(),
+            populationExposed: sviData?.TotalPopulation ?? new Random().Next(0, 25000),
+            sviPercentile: sviData?.AverageSviPercentile ?? new Random().Next(1, 100)/100.0,
+            geometryRef: geometryRef,
+            criticalFacilities: facilities,
+            sources: links.ToArray(),
             title: i.Title
         );
     }

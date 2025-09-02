@@ -57,13 +57,18 @@ public sealed class FirmsActiveFiresFeed : IIncidentFeed
             // Build a Feature with properties similar to NWS feed: source, severity, title (+ FIRMS metadata)
             var title = $"Active fire (FIRMS {row.satellite}/{row.instrument}) at {row.latitude:F4}, {row.longitude:F4}";
             var id = $"{_opt.Dataset}:{(int)row.latitude},{(int)row.longitude}";
+
+            // Create a small polygon (~<500m diameter) centered at the point
+            var radiusMeters = _opt.BufferRadiusMeters ?? 2500.0; // radius, so diameter = 2 * radius
+            var polygonCoordinates = CreateCirclePolygon(row.longitude, row.latitude, radiusMeters, steps: 32);
+
             var feature = new
             {
                 type = "Feature",
                 geometry = new
                 {
-                    type = "Point",
-                    coordinates = new[] { row.longitude, row.latitude } // [lon, lat]
+                    type = "Polygon",
+                    coordinates = polygonCoordinates // [[[lon,lat], ...]]
                 },
                 properties = new
                 {
@@ -80,7 +85,14 @@ public sealed class FirmsActiveFiresFeed : IIncidentFeed
                     row.satellite,
                     row.instrument,
                     row.acq_date,
-                    row.acq_time
+                    row.acq_time,
+                    color = row.frp switch
+                    {
+                        > 40.0 => "red",
+                        <= 40.0 and > 30.0 => "orange",
+                        <= 30.0 => "yellow",
+                        _ => "blue"
+                    }
                 }
             };
 
@@ -147,6 +159,33 @@ public sealed class FirmsActiveFiresFeed : IIncidentFeed
             _ => IncidentSeverity.Unknown
         };
 
+    // Build a small circle polygon around a center point (lon, lat) with the given radius in meters
+    private static double[][][] CreateCirclePolygon(double lon, double lat, double radiusMeters, int steps = 32)
+    {
+        // meters per degree (approx) varies with latitude for longitude
+        const double metersPerDegLat = 111_320.0; // ~ average
+        var metersPerDegLon = metersPerDegLat * Math.Cos(lat * Math.PI / 180.0);
+        if (metersPerDegLon <= 0) metersPerDegLon = 1e-9; // guard near poles
+
+        // Precompute radius in degrees along lat/lon axes
+        var rLatDeg = radiusMeters / metersPerDegLat;
+        var rLonDeg = radiusMeters / metersPerDegLon;
+
+        var ring = new double[steps + 1][];
+        for (int i = 0; i < steps; i++)
+        {
+            var theta = 2 * Math.PI * i / steps;
+            var dLat = rLatDeg * Math.Sin(theta);
+            var dLon = rLonDeg * Math.Cos(theta);
+            ring[i] = [lon + dLon, lat + dLat];
+        }
+        // Close the ring by repeating the first coordinate
+        ring[steps] = [ring[0][0], ring[0][1]];
+
+        // GeoJSON polygon: array of linear rings, first is exterior
+        return [ring];
+    }
+
     // --- CSV shape for FIRMS "area" endpoint ---
     private sealed class FirmsCsvRow
     {
@@ -197,4 +236,7 @@ public sealed class FirmsOptions
     public char? MinConfidence { get; init; } = 'h';
 
     public double MinFrp { get; set; } = 20.0;
+
+    /// <summary>Optional radius (meters) to build a small polygon around each FIRMS point. Default 250 (diameter 500m)</summary>
+    public double? BufferRadiusMeters { get; set; } = 2500.0;
 }

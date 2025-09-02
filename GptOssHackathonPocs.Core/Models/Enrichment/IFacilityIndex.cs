@@ -4,6 +4,6 @@ namespace GptOssHackathonPocs.Core.Models.Enrichment;
 
 public interface IFacilityIndex
 {
-    Task<string[]> NearbyFacilities(Geometry? g);
+    Task<NearbyHospital[]> NearbyFacilities(Geometry? g);
 }
 

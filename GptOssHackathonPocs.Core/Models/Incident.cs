@@ -7,7 +7,7 @@ public enum IncidentSource { NwsAlert, UsgsQuake, NhcStorm, NasaFirms }
 [JsonConverter(typeof(JsonStringEnumConverter<IncidentSeverity>))]
 public enum IncidentSeverity { Unknown = 0, Minor = 1, Moderate = 2, Severe = 3, Extreme = 4 }
 
-public sealed class Incident
+public sealed record Incident
 {
     public string Id { get; init; } = Guid.NewGuid().ToString();
     public IncidentSource Source { get; init; }

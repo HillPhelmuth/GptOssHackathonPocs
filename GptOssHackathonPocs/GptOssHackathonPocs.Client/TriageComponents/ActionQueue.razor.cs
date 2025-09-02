@@ -10,14 +10,14 @@ public partial class ActionQueue
         string IncidentId,
         string Title,
         string Rationale,
-        int PriorityRank,
+        int SeverityLevel,
         int UrgencyLevel, string FullMarkdown);
 
     [Parameter] public IReadOnlyList<ActionQueueItem> Items { get; set; } = [];
     [Parameter] public EventCallback<(ActionQueueItem item, string status)> OnStatusChanged { get; set; }
 
     private static string? UrgencyBadge(ActionQueueItem it)
-        => it.UrgencyLevel >= 8 ? "immediate" : it.UrgencyLevel >= 5 ? "high" : null;
+        => it.UrgencyLevel >= 8 ? "immediate" : it.UrgencyLevel >= 6 ? "high" : it.UrgencyLevel >= 4 ? "medium" : null;
 
     private Task ChangeStatus(ActionQueueItem item, ChangeEventArgs e)
         => OnStatusChanged.InvokeAsync((item, e?.Value?.ToString() ?? string.Empty));

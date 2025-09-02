@@ -3,6 +3,7 @@ using GptOssHackathonPocs;
 using GptOssHackathonPocs.Components;
 using GptOssHackathonPocs.Core;
 using GptOssHackathonPocs.Core.Hubs;
+using GptOssHackathonPocs.Core.Models;
 using GptOssHackathonPocs.Core.Models.Enrichment;
 using GptOssHackathonPocs.Core.Services;
 using GptOssHackathonPocs.Narrative.Core;
@@ -57,6 +58,8 @@ builder.Services.AddAzureClients(clientBuilder =>
     
 });
 builder.Services.AddBlazoredLocalStorage();
+builder.Services.AddCommsHub();
+builder.Services.AddCommsPublishers(builder.Configuration);
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -81,5 +84,6 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddInteractiveWebAssemblyRenderMode()
     .AddAdditionalAssemblies(typeof(GptOssHackathonPocs.Client._Imports).Assembly);
-app.MapHub<ActionPlansHub>("/actionPlans");
+
+app.MapCommsHubWebhooks();
 app.Run();

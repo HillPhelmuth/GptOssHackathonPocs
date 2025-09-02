@@ -14,61 +14,62 @@ namespace GptOssHackathonPocs.Core.Models.Enrichment;
 /// store raw geometry; instead it references a server-side geometry key.
 /// </remarks>
 [Description("Summarized incident details for UI display and enrichment, with sources and context.")]
-public sealed record IncidentCard
+public sealed class IncidentCard
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="IncidentCard"/> record.
     /// </summary>
-    /// <param name="IncidentId">Unique identifier for the incident.</param>
-    /// <param name="Type">
+    /// <param name="incidentId">Unique identifier for the incident.</param>
+    /// <param name="type">
     /// Source/type of the incident. Expected values include:
     /// "NWS.Alert", "USGS.Quake", or "NHC.Storm".
     /// </param>
-    /// <param name="Severity">
+    /// <param name="severity">
     /// Impact level of the incident. One of: "minor", "moderate", "severe", or "extreme".
     /// </param>
-    /// <param name="Timestamp">
+    /// <param name="timestamp">
     /// Timestamp of the incident or its issuance in ISO-8601 with offset (UTC offset preserved).
     /// </param>
-    /// <param name="AdminAreas">
+    /// <param name="adminAreas">
     /// Canonical administrative areas affected, formatted as "State/County" (e.g., "TX/Harris", "LA/Orleans").
     /// </param>
-    /// <param name="PopulationExposed">
+    /// <param name="populationExposed">
     /// Precomputed estimate of the population exposed within the impacted geometry.
     /// </param>
-    /// <param name="SviPercentile">
+    /// <param name="sviPercentile">
     /// CDC Social Vulnerability Index percentile in the inclusive range [0, 1],
     /// where 1 indicates highest vulnerability.
     /// </param>
-    /// <param name="GeometryRef">
+    /// <param name="geometryRef">
     /// Server-known geometry key referencing stored geometry; not raw GeoJSON.
     /// </param>
-    /// <param name="CriticalFacilities">
+    /// <param name="criticalFacilities">
     /// List of impacted critical facilities using "Category:Name" format (e.g., "Hospital:BenTaub").
     /// </param>
-    /// <param name="Sources">Evidence links that support and contextualize this incident.</param>
+    /// <param name="sources">Evidence links that support and contextualize this incident.</param>
+    /// <param name="title">A short, human-readable title for the incident.</param>
     [Description("Creates a new incident card with core attributes and supporting evidence.")]
-    public IncidentCard(string IncidentId,
-        string Type, // "NWS.Alert" | "USGS.Quake" | "NHC.Storm"
-        string Severity, // "minor|moderate|severe|extreme"
-        DateTimeOffset Timestamp,
-        string[] AdminAreas, // ["TX/Harris","LA/Orleans"]
-        double PopulationExposed, // precomputed
-        double SviPercentile, // 0..1 (precomputed)
-        string GeometryRef, // server-known key, not raw GeoJSON
-        string[] CriticalFacilities, // ["Hospital:BenTaub","School:Foo"]
-        EvidenceLink[] Sources, string title)
+    public IncidentCard(string incidentId,
+        string type, // "NWS.Alert" | "USGS.Quake" | "NHC.Storm"
+        string severity, // "minor|moderate|severe|extreme"
+        DateTimeOffset timestamp,
+        string[] adminAreas, // ["TX/Harris","LA/Orleans"]
+        double populationExposed, // precomputed
+        double sviPercentile, // 0..1 (precomputed)
+        string geometryRef, // server-known key, not raw GeoJSON
+        NearbyHospital[] criticalFacilities, // ["Hospital:BenTaub","School:Foo"]
+        EvidenceLink[] sources, string title)
     {
-        this.IncidentId = IncidentId;
-        this.Type = Type;
-        this.Severity = Severity;
-        this.Timestamp = Timestamp;
-        this.AdminAreas = AdminAreas;
-        this.PopulationExposed = PopulationExposed;
-        this.SviPercentile = SviPercentile;
-        this.GeometryRef = GeometryRef;
-        this.CriticalFacilities = CriticalFacilities;
-        this.Sources = Sources;
+        this.IncidentId = incidentId;
+        this.Type = type;
+        this.Severity = severity;
+        this.Timestamp = timestamp;
+        this.AdminAreas = adminAreas;
+        this.PopulationExposed = populationExposed;
+        this.SviPercentile = sviPercentile;
+        this.GeometryRef = geometryRef;
+        this.NearbyHospitals = criticalFacilities;
+        this.Sources = sources;
         this.Title = title;
     }
     [JsonPropertyName("title")]
@@ -92,11 +93,11 @@ public sealed record IncidentCard
         sb.AppendLine($"- {LabelWithDesc("Population Exposed", nameof(PopulationExposed))}: {PopulationExposed:N0}");
         sb.AppendLine($"- {LabelWithDesc("SVI Percentile", nameof(SviPercentile))}: {SviPercentile:P0}");
         sb.AppendLine($"- {LabelWithDesc("Geometry Ref", nameof(GeometryRef))}: {GeometryRef}");
-        if (CriticalFacilities.Length > 0)
-            sb.AppendLine($"- {LabelWithDesc("Critical Facilities", nameof(CriticalFacilities))}: {string.Join(", ", CriticalFacilities)}");
+        if (NearbyHospitals.Length > 0)
+            sb.AppendLine($"- {LabelWithDesc("Nearby Hospitals", nameof(NearbyHospitals))}: {string.Join(", ", NearbyHospitals.Select(x => x.ToString()))}");
         else
         {
-            sb.AppendLine($"- {LabelWithDesc("Critical Facilities", nameof(CriticalFacilities))}: None");
+            sb.AppendLine($"- {LabelWithDesc("Nearby Hospitals", nameof(NearbyHospitals))}: None");
         }
         if (Sources.Length > 0)
         {
@@ -183,9 +184,9 @@ public sealed record IncidentCard
     /// <summary>
     /// Impacted critical facilities, in "Category:Name" format.
     /// </summary>
-    [Description("List of impacted critical facilities (e.g., 'Hospital:BenTaub').")]
-    [JsonPropertyName("critical_facilities")]
-    public string[] CriticalFacilities { get; init; }
+    [Description("List of critical medical facilities (e.g., 'Hospital:BenTaub') near the emergency.")]
+    [JsonPropertyName("nearby_hospitals")]
+    public NearbyHospital[] NearbyHospitals { get; init; }
 
     /// <summary>
     /// Evidence links that support and contextualize the incident details.

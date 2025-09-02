@@ -11,10 +11,7 @@
 		<PackageReference Include="Microsoft.Extensions.Http.Polly" Version="9.0.8" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.8" />
 		<PackageReference Include="Microsoft.SemanticKernel" Version="1.63.0" />
-		<PackageReference Include="Microsoft.SemanticKernel.Agents.Magentic" Version="1.63.0-preview" />
 		<PackageReference Include="Microsoft.SemanticKernel.Agents.OpenAI" Version="1.63.0-preview" />
-		<PackageReference Include="Microsoft.SemanticKernel.Agents.Orchestration" Version="1.63.0-preview" />
-		<PackageReference Include="Microsoft.SemanticKernel.Agents.Runtime.InProcess" Version="1.63.0-preview" />
 	</ItemGroup>
   <ItemGroup>
     <None Remove="StaticData\WorldAgents.json" />

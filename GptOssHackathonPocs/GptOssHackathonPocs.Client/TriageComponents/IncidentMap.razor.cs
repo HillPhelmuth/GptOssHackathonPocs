@@ -7,6 +7,7 @@ namespace GptOssHackathonPocs.Client.TriageComponents;
 public partial class IncidentMap
 {
     [Parameter] public IReadOnlyList<Incident>? Incidents { get; set; }
+    private List<Incident>? _incidents;
     private readonly string _mapId = $"map-{Guid.NewGuid():N}";
     private bool _ready;
     private bool _hasRendered;
@@ -24,13 +25,23 @@ public partial class IncidentMap
             _ready = true;
             await PushIncidentsAsync();
             _hasRendered = true;
+            _incidents = Incidents?.ToList();
         }
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        if(_hasRendered) 
-            await PushIncidentsAsync();
+        // Check if incidents have changed by comparing _incidents and Incidents
+        if (_incidents is null && Incidents is not null || _incidents is not null && Incidents is null ||
+            _incidents?.Count != Incidents?.Count || (_incidents is not null && Incidents is not null &&
+            !_incidents.SequenceEqual(Incidents)))
+        {
+            _incidents = Incidents?.ToList();
+            if(_hasRendered) 
+                await PushIncidentsAsync();
+        }
+        //if (_hasRendered) 
+        //    await PushIncidentsAsync();
     }
 
     private async Task PushIncidentsAsync()

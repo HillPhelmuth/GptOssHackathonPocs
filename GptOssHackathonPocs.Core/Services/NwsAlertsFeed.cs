@@ -69,7 +69,15 @@ public sealed class NwsAlertsFeed : IIncidentFeed
                         id,
                         source = sourceStr,
                         severity = severityStr,
-                        title = headline
+                        title = headline,
+                        color = severityStr switch
+                        {
+                            "extreme" => "darkblue",
+                            "severe"  => "blue",
+                            "moderate"=> "lightblue",
+                            "minor"   => "grey",
+                            _ => "blue"
+                        }
                     }
                 };
 
