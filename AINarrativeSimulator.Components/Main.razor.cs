@@ -1,6 +1,7 @@
 ﻿using Blazored.LocalStorage;
 using GptOssHackathonPocs.Narrative.Core;
 using GptOssHackathonPocs.Narrative.Core.Models;
+using GptOssHackathonPocs.Narrative.Core.Services;
 using Markdig;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Identity.Client;
@@ -12,11 +13,13 @@ public partial class Main
 {
     private List<WorldAgentAction> _actions = [];
     private List<WorldAgent> _agents = [];
-
+    private List<BeatSummary> _beats = [];
     [Inject]
     private WorldState WorldState { get; set; } = default!;
     [Inject]
-    private NarrativeOrchestration NarrativeOrchestration { get; set; } = default!;
+    private INarrativeOrchestration NarrativeOrchestration { get; set; } = default!;
+    [Inject]
+    private IBeatEngine BeatEngine { get; set; } = default!;
     private string? selectedAgentId;
     private bool isRunning;
     private string _rumor = "";
@@ -35,6 +38,12 @@ public partial class Main
     private bool _isSummarizing = false;
     private string _summary = "";
 
+    private bool _showComics;
+    // Throttling for local storage writes of agents
+    private static readonly TimeSpan AgentsPersistInterval = TimeSpan.FromMinutes(5);
+    private DateTime _lastAgentsPersistedUtc = DateTime.MinValue;
+    private DateTime _lastWorldStatePersistedUtc = DateTime.MinValue;
+    private int _seenHash;
     private async Task OpenSummaryModal()
     {
         _showSummaryModal = true;
@@ -74,17 +83,31 @@ public partial class Main
         }
     }
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         
-        // Optional: seed with an example location so WorldController has content to render gracefully
-        //WorldState.Locations["square"] = new LocationState
-        //{
-        //    Id = "square",
-        //    Name = "Town Square",
-        //    Atmosphere = "Quiet morning with distant gulls",
-        //    Occupants = []
-        //};
+    }
+
+    private void HandleBeat(BeatSummary beat)
+    {
+        // Group by continuity: keep last N beats per storyline; cap total
+        const int perStoryMax = 5;
+        const int totalMax = 40;
+
+        var existingForStory = _beats.Where(b => b.ContinuityKey == beat.ContinuityKey).ToList();
+        _beats.Add(beat);
+        if (existingForStory.Count >= perStoryMax)
+        {
+            var oldest = existingForStory.OrderBy(b => b.WindowEndUtc).First();
+            _beats.Remove(oldest);
+        }
+
+        while (_beats.Count > totalMax)
+        {
+            _beats.RemoveAt(0);
+        }
+
+        InvokeAsync(StateHasChanged);
     }
 
     private async Task GenerateSummary()
@@ -112,6 +135,8 @@ public partial class Main
         {
             WorldState.PropertyChanged += HandleWorldStatePropertyChanged;
             NarrativeOrchestration.WriteAgentChatMessage += HandleAgentChatMessageWritten;
+            BeatEngine.OnBeat += HandleBeat;
+            await BeatEngine.StartAsync();
             _module = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/AINarrativeSimulator.Components/resizableGrid.js");
             await _module.InvokeVoidAsync("initResizableGrid", _grid);
         }
@@ -140,11 +165,30 @@ public partial class Main
             {
                 case nameof(WorldState.WorldAgents):
                     _agents = WorldState.WorldAgents.Agents;
-                    await LocalStorage.SetItemAsync($"agents-{DateTime.Now:hh:mm:ss}", WorldState.WorldAgents);
+                    var nowUtc = DateTime.UtcNow;
+                    if (nowUtc - _lastAgentsPersistedUtc >= AgentsPersistInterval)
+                    {
+                        await LocalStorage.SetItemAsync($"agents-{DateTime.Now:hh:mm:ss}", WorldState.WorldAgents);
+                        _lastAgentsPersistedUtc = nowUtc;
+                    }
                     await InvokeAsync(StateHasChanged);
                     break;
                 case nameof(WorldState.RecentActions):
+                    // Cheap change detector (hash of timestamps + counts)
+                    var hash = Hash(WorldState.RecentActions);
+                    if (hash == _seenHash) return;
                     _actions = WorldState.RecentActions;
+                    var lastAction = _actions.FirstOrDefault();
+                    if (lastAction is null) return;
+                    BeatEngine.Add(lastAction);
+
+                    var nowUtc2 = DateTime.UtcNow;
+
+                    if (nowUtc2 - _lastWorldStatePersistedUtc >= AgentsPersistInterval)
+                    {
+                        await LocalStorage.SetItemAsync($"worldstate-{DateTime.Now:hh:mm:ss}", WorldState);
+                        _lastWorldStatePersistedUtc = nowUtc2;
+                    }
                     await InvokeAsync(StateHasChanged);
                     break;
             }
@@ -154,7 +198,20 @@ public partial class Main
             Console.WriteLine($"Error handling WorldState property change: {ex.Message}");
         }
     }
+    private static int Hash(IEnumerable<WorldAgentAction> actions)
+    {
+        unchecked
+        {
+            int h = 17;
+            foreach (var a in actions)
+            {
+                h = h * 31 + a.Timestamp.GetHashCode();
+                h = h * 31 + (a.Details?.GetHashCode() ?? 0);
+            }
 
+            return h;
+        }
+    }
     private async Task HandleStart()
     {
         isRunning = true;

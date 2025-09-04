@@ -6,7 +6,7 @@ namespace GptOssHackathonPocs.Client.Pages;
 public partial class NarrativeZooPage : ComponentBase, IDisposable
 {
     [Inject]
-    private NarrativeOrchestration NarrativeOrchestration { get; set; } = default!;
+    private INarrativeOrchestration NarrativeOrchestration { get; set; } = default!;
 
     [Inject]
     private WorldState WorldState { get; set; } = default!;

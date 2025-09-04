@@ -123,3 +123,9 @@ function isMobile() {
 function clamp(v, min, max) {
     return Math.max(min, Math.min(max, v));
 }
+
+export function scrollToBottom(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+}

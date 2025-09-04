@@ -21,3 +21,15 @@ public class AutoInvocationFilter : IAutoFunctionInvocationFilter
         OnAfterInvocation?.Invoke(context);
     }
 }
+
+public class FunctionInvocationFilter : IFunctionInvocationFilter
+{
+    public event Action<FunctionInvocationContext>? OnBeforeInvocation;
+    public event Action<FunctionInvocationContext>? OnAfterInvocation;
+    public async Task OnFunctionInvocationAsync(FunctionInvocationContext context, Func<FunctionInvocationContext, Task> next)
+    {
+        OnBeforeInvocation?.Invoke(context);
+        await next(context);
+        OnAfterInvocation?.Invoke(context);
+    }
+}

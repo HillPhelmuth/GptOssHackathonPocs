@@ -1,0 +1,23 @@
+
+.stepper { display:flex; gap:.5rem; margin:.5rem 0 1rem; }
+.step { padding:.5rem .75rem; border:1px solid #555; background:#222; color:#ddd; border-radius:.5rem; }
+.step.active { background:#444; }
+.pane { display:grid; grid-template-columns: 1fr 320px; gap:1rem; }
+.pane .sidebar { border-left:1px dashed #444; padding-left:1rem; }
+.field { margin-bottom:.75rem; display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; }
+.text { width:100%; padding:.4rem; background:#111; color:#eee; border:1px solid #444; border-radius:.25rem; }
+.number { width:7rem; }
+.chip { display:inline-flex; gap:.35rem; align-items:center; margin-right:.5rem; padding:.2rem .4rem; border:1px solid #555; border-radius:1rem; }
+.btn { padding:.45rem .75rem; border:1px solid #666; background:#333; color:#fff; border-radius:.35rem; cursor:pointer; }
+.btn.primary { background:#0b5; border-color:#0a4; }
+.action-card { border:1px solid #444; padding:.75rem; border-radius:.5rem; margin-bottom:.75rem; background:#1a1a1a; }
+.action-card .title { font-weight:700; }
+.action-card .meta { display:flex; gap:.5rem; flex-wrap:wrap; margin:.25rem 0; }
+.pill { display:inline-block; background:#2a2a2a; padding:.12rem .45rem; border-radius:999px; border:1px solid #444; font-size:.85rem; }
+.pill.priority-urgent { background:#5b1a1a; }
+.pill.priority-high { background:#5b3d1a; }
+.desc { opacity:.9; }
+.instructions { white-space:pre-wrap; background:#111; padding:.5rem; border-radius:.25rem; border:1px solid #333; }
+.grid2 { display:grid; grid-template-columns: 1fr 1fr; gap:1rem; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+.job { border:1px dashed #444; padding:.5rem; border-radius:.25rem; margin:.5rem 0; }

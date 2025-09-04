@@ -40,15 +40,29 @@ internal class OpenRouterReasoningHandler(HttpMessageHandler innerHandler, ILogg
                     root.AsObject().Remove("frequency_penalty");
                     root.AsObject().Remove("parallel_tool_calls");
                     // Add provider object to the root with the specified order array
-                    root["provider"] = new JsonObject
+                    var model = root["model"]?.GetValue<string>() ?? "unknown";
+                    _output.LogInformation($"Model: {model}");
+                    JsonArray providers;
+                    if (model.Contains("gpt-oss-120b", StringComparison.OrdinalIgnoreCase))
                     {
-                        ["only"] = new JsonArray
-                        {
+                        providers =
+                        [
                             "Cerebras",
                             "groq"
-                        }
+                        ];
+                    }
+                    else
+                    {
+                        providers =
+                        [
+                            "groq"
+                        ];
+                    }
+                    root["provider"] = new JsonObject
+                    {
+                        ["only"] = providers
                     };
-
+                    _output.LogInformation("Providers: " + string.Join(", ", providers.Select(p => p.GetValue<string>())));
                     // Remove "strict" property from response_format.json_schema if present
                     if (root["response_format"] is JsonObject responseFormat && responseFormat["json_schema"] is JsonObject jsonSchema)
                     {
@@ -58,7 +72,7 @@ internal class OpenRouterReasoningHandler(HttpMessageHandler innerHandler, ILogg
                     // Serialize the modified content back into the request
                     var modifiedContent = root.ToJsonString();
                     request.Content = new StringContent(modifiedContent, Encoding.UTF8, "application/json");
-                    _output.LogInformation("=== REQUEST ===\n\n"+modifiedContent);
+                    //_output.LogInformation("=== REQUEST ===\n\n" + modifiedContent);
                 }
             }
             catch (JsonException)

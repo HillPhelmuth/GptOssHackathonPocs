@@ -9,10 +9,11 @@ public class WorldAgents
 {
     [JsonPropertyName("agents")]
     public List<WorldAgent> Agents { get; set; } = [];
-
+    public string Name { get; set; }
+    public string Description { get; set; }
     public static WorldAgents DefaultFromJson()
     {
-        var defaultWorldAgents = FileHelper.ExtractFromAssembly<WorldAgents>("WorldAgents.json");
+        var defaultWorldAgents = FileHelper.ExtractFromAssembly<WorldAgents>("DystopiaAgents.json");
         return defaultWorldAgents;
     }
 }
@@ -34,6 +35,8 @@ public class WorldAgent
     [JsonPropertyName("prompt")]
     public required string Prompt { get; set; }
     public string? Notes { get; private set; }
+    [JsonPropertyName("image_url")]
+    public string? ImageUrl { get; set; }
     public DateTime LastUpdate { get; set; }
 
     public void AddNotes(string notes)
@@ -55,6 +58,7 @@ public class WorldAgent
                 {Prompt}
 
                 ## Instructions
+                * You are a Character AI, simulating a character in a dynamic world that is building a novel-like narrative. All your behavior should be interesting and move the plot/narrative forward.
                 
                 * Before responding, always start by taking an action. Use the information below, with particular focus on **World State**, to inform your decisions.
                 
@@ -85,6 +89,8 @@ public class WorldAgent
             Update your current mood, short-term goals, long term goals, and location as required by the action you just took and the current world state.
             
             Do not remove any existing goals, just modify existing goals add/or new ones as needed.
+            
+            Your update must be directly relevant to the action you took and take the current world state into account.
             
             ## Your Current State
             
@@ -133,6 +139,7 @@ public class WorldAgent
             """;
     }
 }
+
 
 public class DynamicState
 {

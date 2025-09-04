@@ -16,7 +16,21 @@ using System.Text.Json;
 
 namespace GptOssHackathonPocs.Narrative.Core;
 
-public class NarrativeOrchestration
+public interface INarrativeOrchestration
+{
+    event Action<string, string>? WriteAgentChatMessage;
+    event Action<string, string>? OnAgentFunctionCompleted;
+    Task RunNarrativeAsync(string userInput, CancellationToken ct = default);
+    Task<T?> ExecuteLlmPrompt<T>(string inputPrompt, string model = "openai/gpt-oss-20b", CancellationToken ct = default);
+    Task<string> SummarizeCurrentWorldState();
+
+    Task<string?> ExecuteLlmPrompt(string inputPrompt, string model = "openai/gpt-oss-20b",
+        OpenAIPromptExecutionSettings? settings = null, CancellationToken ct = default);
+
+    Task GenerateAgents(string input, int numberOfAgents = 3);
+}
+
+public class NarrativeOrchestration : INarrativeOrchestration
 {
     public event Action<string, string>? WriteAgentChatMessage;
     private ChatHistory _history = [];
@@ -24,14 +38,27 @@ public class NarrativeOrchestration
     private readonly IConfiguration _configuration;
     private readonly WorldState _worldState;
     private readonly AutoInvocationFilter _autoInvocationFilter = new();
+    private FunctionInvocationFilter _functionInvocationFilter = new();
     private readonly ILogger<NarrativeOrchestration> _logger;
+    public event Action<string, string>? OnAgentFunctionCompleted;
+    private Dictionary<string, int> _agentParticipationCount = [];
     public NarrativeOrchestration(ILoggerFactory loggerFactory, IConfiguration configuration, WorldState worldState)
     {
         _loggerFactory = loggerFactory;
         _configuration = configuration;
         _worldState = worldState;
         _autoInvocationFilter.OnAfterInvocation += HandleAutoInvocationFilterAfterInvocation;
+        _functionInvocationFilter.OnAfterInvocation += HandleFunctionInvocationFilterAfterInvocation;
         _logger = loggerFactory.CreateLogger<NarrativeOrchestration>();
+        _agentParticipationCount = _worldState.WorldAgents.Agents.ToDictionary(a => a.AgentId, _ => 0);
+    }
+
+    private void HandleFunctionInvocationFilterAfterInvocation(FunctionInvocationContext functionInvocationContext)
+    {
+        var activeAgent = _worldState.ActiveWorldAgent?.AgentId;
+        var functionInfo =
+            $"{functionInvocationContext.Function.Name} invoked for {activeAgent}\n\nResults:\n\n{functionInvocationContext.Result.ToString()}";
+        OnAgentFunctionCompleted?.Invoke(functionInfo, activeAgent ?? "Unknown");
     }
 
     private void HandleAutoInvocationFilterAfterInvocation(AutoFunctionInvocationContext invocationContext)
@@ -70,7 +97,7 @@ public class NarrativeOrchestration
 
         var settings = new OpenAIPromptExecutionSettings()
         {
-            FunctionChoiceBehavior = FunctionChoiceBehavior.Required(worldAgentPlugin.Where(x =>
+            FunctionChoiceBehavior = FunctionChoiceBehavior.Auto(worldAgentPlugin.Where(x =>
             x.Name is nameof(WorldAgentsPlugin.TakeAction))),
             ReasoningEffort = "high"
         };
@@ -82,13 +109,13 @@ public class NarrativeOrchestration
     public async Task RunNarrativeAsync(string userInput, CancellationToken ct = default)
     {
 
-        _history.AddUserMessage(userInput);
+        //_history.AddUserMessage(userInput);
         var errors = 0;
         while (true)
         {
             try
             {
-                if (_history.Count > 5)
+                if (_history.Count > 15)
                 {
                     _history.RemoveAt(0);
                 }
@@ -104,13 +131,14 @@ public class NarrativeOrchestration
                 var args = new KernelArguments(settings);
                 //var chat = kernel.GetRequiredService<IChatCompletionService>();
                 var response = await kernel.InvokePromptAsync<string>(prompt, args, cancellationToken: ct);
+                WriteLine($"{response}");
                 _history.AddAssistantMessage(response.ToString() ?? "");
                 var lastAction = _worldState.RecentActions.Last().ToTypeMarkdown().Item2;
 
                 var updateDynamicStatePrompt = nextAgent.UpdateDynamicStatePrompt(_worldState.WorldStateMarkdown(), lastAction);
                 var updateMemoryPrompt = nextAgent.UpdateKnowledgeMemoryPrompt(_worldState.WorldStateMarkdown(), lastAction);
                 await UpdateAgentStates(updateDynamicStatePrompt, updateMemoryPrompt, ct);
-                WriteLine($"{response}");
+                
             }
             catch (Exception ex)
             {
@@ -124,16 +152,44 @@ public class NarrativeOrchestration
 
     }
 
+    public async Task<T?> ExecuteLlmPrompt<T>(string inputPrompt, string model = "openai/gpt-oss-20b", CancellationToken ct = default)
+    {
+        var response = await ExecuteLlmPrompt(inputPrompt, model,
+            new OpenAIPromptExecutionSettings() { ResponseFormat = typeof(T) }, ct);
+        return JsonSerializer.Deserialize<T>(response);
+    }
+
+    public async Task<string?> ExecuteLlmPrompt(string inputPrompt, string model = "openai/gpt-oss-20b",
+        OpenAIPromptExecutionSettings? settings = null, CancellationToken ct = default)
+    {
+        var kernel = CreateKernel(model);
+        return await kernel.InvokePromptAsync<string>(inputPrompt, cancellationToken:ct);
+    }
+    public async Task GenerateAgents(string input, int numberOfAgents = 3)
+    {
+        var kernel = CreateKernel();
+        var prompt = $"Create {numberOfAgents} that fit the following description:\n\n## Description\n\n{input}";
+        var settings = new OpenAIPromptExecutionSettings()
+            { ResponseFormat = typeof(WorldAgents), ChatSystemPrompt = WorldAgentsPlugin.Prompt, ReasoningEffort = "high" };
+        var result = await kernel.InvokePromptAsync<string>(prompt, new KernelArguments(settings));
+        _worldState.WorldAgents = JsonSerializer.Deserialize<WorldAgents>(result ?? "") ?? WorldAgents.DefaultFromJson();
+    }
     private async Task UpdateAgentStates(string updateDynamicStatePrompt, string updateMemoryPrompt, CancellationToken ct)
     {
         var smallKernel = CreateKernel("openai/gpt-oss-20b");
-        var updateStateSettings = new OpenAIPromptExecutionSettings() { ReasoningEffort = "medium", ResponseFormat = typeof(UpdateAgentStateRequest) };
+        smallKernel.FunctionInvocationFilters.Add(_functionInvocationFilter);
+        var updateStateSettings = new OpenAIPromptExecutionSettings() { ReasoningEffort = "medium", ResponseFormat = typeof(UpdateAgentStateRequest), Temperature = 0.5};
+        var stateFunction = KernelFunctionFactory.CreateFromPrompt(updateDynamicStatePrompt, updateStateSettings, "UpdateAgentState");
+        var memorySettings = new OpenAIPromptExecutionSettings() { ReasoningEffort = "medium", ResponseFormat = typeof(UpdateAgentMemoryRequest), Temperature = 0.5};
+        var memoryFunction =
+            KernelFunctionFactory.CreateFromPrompt(updateMemoryPrompt, memorySettings, "UpdateAgentMemory");
         var updateArgs = new KernelArguments(updateStateSettings);
         try
         {
             var agentStateUpdateResponse =
-                await smallKernel.InvokePromptAsync<string>(updateDynamicStatePrompt, updateArgs,
-                    cancellationToken: ct);
+                await smallKernel.InvokeAsync<string>(stateFunction, updateArgs, cancellationToken: ct);
+                //await smallKernel.InvokePromptAsync<string>(updateDynamicStatePrompt, updateArgs,
+                //    cancellationToken: ct);
             var agentStateUpdate = JsonSerializer.Deserialize<UpdateAgentStateRequest>(agentStateUpdateResponse ?? "");
             var updateLog = UpdateAgentState(agentStateUpdate.Description, agentStateUpdate.UpdatedDynamicState);
             _logger.LogInformation("Agent State Update: {UpdateLog}", updateLog);
@@ -142,12 +198,13 @@ public class NarrativeOrchestration
         {
             _logger.LogError(ex, "Error updating agent state");
         }
-        var memorySettings = new OpenAIPromptExecutionSettings() { ReasoningEffort = "medium", ResponseFormat = typeof(UpdateAgentMemoryRequest) };
+        
         var memArgs = new KernelArguments(memorySettings);
         try
         {
-            var memoryUpdateResponse =
-                await smallKernel.InvokePromptAsync<string>(updateMemoryPrompt, memArgs, cancellationToken: ct);
+            var memoryUpdateResponse = await smallKernel.InvokeAsync<string>(memoryFunction, memArgs, cancellationToken: ct);
+            /*await smallKernel.InvokePromptAsync<string>(updateMemoryPrompt, memArgs, cancellationToken: ct)*/
+            ;
             var agentMemoryUpdate = JsonSerializer.Deserialize<UpdateAgentMemoryRequest>(memoryUpdateResponse ?? "");
             var memLog = UpdateAgentMemory(agentMemoryUpdate.Description, agentMemoryUpdate.UpdatedKnowledgeMemory);
             _logger.LogInformation("Agent Memory Update: {MemLog}", memLog);
@@ -194,7 +251,10 @@ public class NarrativeOrchestration
 
     private const string NextAgentPromptTemplate = """
 	                                               You are in a role play game. Carefully read the conversation history as select the next participant using the provided schema.
-	                                               The available participants are:
+	                                               
+	                                               Prioritize selecting participants who have not spoken many times recently, or who have not spoken at all.
+	                                               
+	                                               The available participants along with the number of times they've spoken are:
 	                                               - {{$speakerList}}
 
 	                                               ### Conversation history
@@ -209,9 +269,15 @@ public class NarrativeOrchestration
         Console.WriteLine("SelectAgentAsync");
         var settings = new OpenAIPromptExecutionSettings
         {
-            ResponseFormat = typeof(NextAgent)
+            ResponseFormat = typeof(NextAgent), Temperature = 0.2
         };
-        history = new ChatHistory(history.TakeLast(4).ToList());
+        history = new ChatHistory(history);
+        var messageHistory = history.ToList();
+        messageHistory.ForEach(m =>
+        {
+            m.Content = m.Content.Length > 250 ? m.Content[..250] + "..." : m.Content;
+        });
+        history = new ChatHistory(messageHistory);
         var kernelArgs = UpdateKernelArguments(history, agents, settings);
         var promptFactory = new KernelPromptTemplateFactory();
         var templateConfig = new PromptTemplateConfig(NextAgentPromptTemplate);
@@ -229,6 +295,7 @@ public class NarrativeOrchestration
             var name = agent?.Name ?? "";
             Console.WriteLine("AutoSelectNextAgent: " + name);
             var nextAgent = _worldState.WorldAgents.Agents.FirstOrDefault(interactive => interactive.AgentId.Equals(name, StringComparison.InvariantCultureIgnoreCase)) ?? currentAgent;
+            _agentParticipationCount[nextAgent.AgentId]++;
             Console.WriteLine($"Selected Next Agent: {nextAgent?.AgentId}");
             return nextAgent;
         }
@@ -249,17 +316,18 @@ public class NarrativeOrchestration
         [Description("The **Name** of the participant")]
         public required string Name { get; set; }
     }
-    private static KernelArguments UpdateKernelArguments(IReadOnlyList<ChatMessageContent> history, IReadOnlyList<WorldAgent> agents, OpenAIPromptExecutionSettings settings)
+    
+    private KernelArguments UpdateKernelArguments(IReadOnlyList<ChatMessageContent> history, IReadOnlyList<WorldAgent> agents, OpenAIPromptExecutionSettings settings)
     {
         var groupConvoHistory = string.Join("\n ", history?.Select(message => $"From: \n{message?.AuthorName}\n### Message\n {message?.Content}\n") ?? []);
         var kernelArgs = new KernelArguments(settings)
         {
-            ["speakerList"] = string.Join("\n ", agents.Select(a => $"**Name:** {a?.AgentId}\n")),
+            ["speakerList"] = string.Join("\n ", _agentParticipationCount.Select(a => $"**Name:** {a.Key} (spoken {a.Value} times)\n")),
             ["conversationHistory"] = groupConvoHistory
         };
         return kernelArgs;
     }
-    public string UpdateAgentMemory(
+    private string UpdateAgentMemory(
         [Description("Description of the update")] string description,
         [Description("The updated agent knowledge memory and relationships")] KnowledgeMemory updatedKnowledgeMemory)
     {
@@ -272,7 +340,12 @@ public class NarrativeOrchestration
             }
 
             var agentId = agent.AgentId;
-
+            if (updatedKnowledgeMemory.RecentMemories.Count == 1)
+            {
+                var memories = agent.KnowledgeMemory.RecentMemories;
+                memories.AddRange(updatedKnowledgeMemory.RecentMemories);
+                updatedKnowledgeMemory.RecentMemories = memories.Distinct().ToList();
+            }
             agent.KnowledgeMemory = updatedKnowledgeMemory;
 
             agent.AddNotes(description);
@@ -284,7 +357,7 @@ public class NarrativeOrchestration
             return $"Error updating agent memory: {ex.Message}";
         }
     }
-    public string UpdateAgentState(
+    private string UpdateAgentState(
         [Description("Description of the update")] string description,
         [Description("The updated agent dynamic state")] DynamicState updatedDynamicState)
     {

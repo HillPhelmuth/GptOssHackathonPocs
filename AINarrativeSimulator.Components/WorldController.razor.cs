@@ -32,7 +32,8 @@ public partial class WorldController
         "Stationwide power ration drops as the Command Spire diverts load to the siphon array",
         "Licensed protest fills the Agora Concourse over priority berths; Security sets de-escalation lines",
         "Xenomed Bay issues a contamination alert; Biofab initiates a quiet reagent recall",
-        "Quantum Research Lab reports a jitter spike near the Terraforming Yard; build paused for mitigation"
+        "Quantum Research Lab reports a jitter spike near the Terraforming Yard; build paused for mitigation",
+        "An unknown alien armada has warped into orbit and begun a deadly bombardment. All other concerns should take a back-seat as the station mobilizes for war."
     ];
 
     private async Task HandleInjectRumorAsync()

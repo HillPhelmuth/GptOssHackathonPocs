@@ -51,7 +51,7 @@
 
 /* Feed list */
 .feed-scroll {
-    height: 100%;
+    height: 80vh;
     overflow-y: auto;
     padding: 1rem;
     display: flex;

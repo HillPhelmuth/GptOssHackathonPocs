@@ -1,0 +1,125 @@
+
+@page "/comms"
+@using System.ComponentModel.DataAnnotations
+@using GptOssHackathonPocs.Core.Models
+@using GptOssHackathonPocs.Core.Services.PublishActions
+
+@using GptOssHackathonPocs.Core.Models.Publishing
+
+@inject ActionQueueState Queue
+@inject IDispatchService Dispatch
+
+<h2>Communications Hub</h2>
+
+<div class="stepper">
+    <button class="step @(Step==1?"active":"")" @onclick="(()=>Step=1)">1. Select</button>
+    <button class="step @(Step==2?"active":"")" @onclick="(()=>Step=2)">2. Compose</button>
+    <button class="step @(Step==3?"active":"")" @onclick="(()=>Step=3)">3. Approve</button>
+    <button class="step @(Step==4?"active":"")" @onclick="(()=>Step=4)">4. Send</button>
+</div>
+
+@if (Step == 1)
+{
+    <div class="pane">
+        <h3>Suggested Actions</h3>
+        @if (Queue.Suggested.Count == 0)
+        {
+            <p>No actions from the model yet. When the Action Queue populates, they will appear here.</p>
+        }
+        else
+        {
+            foreach (var item in Queue.Suggested)
+            {
+                <ActionCard Item="item" Selected="@Queue.Selected.Contains(item)" OnToggle="@(()=>Queue.ToggleSelection(item))" />
+            }
+        }
+
+        <div class="sidebar">
+            <h4>Channel &amp; Audience</h4>
+            <EditForm Model="@Model">
+                <div class="field">
+                    <label><input type="checkbox" @bind="Model.IsPublic" /> Public broadcast (CAP)</label>
+                </div>
+                <div class="field">
+                    <label>Groups (for targeted)</label>
+                    <input class="text" @bind="Model.GroupsCsv" placeholder="Hospitals – Region 4, EOC Ops" />
+                </div>
+                <div class="field">
+                    <label>Channels</label>
+                    @foreach (var ch in Enum.GetValues<Channel>())
+                    {
+                        <label class="chip"><input type="checkbox" @bind="Model.ChannelMap[ch]" /> @ch</label>
+                    }
+                </div>
+                <div class="field">
+                    <label><input type="checkbox" @bind="Model.RequireAck" /> Require recipients to acknowledge</label>
+                </div>
+                <div class="field">
+                    <label>Follow-up reminder (minutes)</label>
+                    <input type="number" @bind="Model.FollowUpMinutes" min="0" class="number" />
+                </div>
+                <button class="btn primary" @onclick="Next" disabled="@(Queue.Selected.Count==0)">Next</button>
+            </EditForm>
+        </div>
+    </div>
+}
+else if (Step == 2)
+{
+    <div class="pane">
+        <h3>Compose &amp; Preview</h3>
+        <div class="grid2">
+            <div>
+                <label>Short message (SMS/WEA)</label>
+                <textarea class="mono" rows="5" @bind="Compose.ShortText"></textarea>
+                <div class="hint">@Compose.ShortText?.Length ?? 0 / 240 chars</div>
+            </div>
+            <div>
+                <label>Long message (Email/Chat)</label>
+                <textarea class="mono" rows="12" @bind="Compose.LongText"></textarea>
+            </div>
+        </div>
+        <details>
+            <summary>CAP Preview (read-only)</summary>
+            <pre class="mono">@CapPreview()</pre>
+        </details>
+        <button class="btn" @onclick="(()=>Step=1)">Back</button>
+        <button class="btn primary" @onclick="(()=>Step=3)">Next</button>
+    </div>
+}
+else if (Step == 3)
+{
+    <div class="pane">
+        <h3>Approval</h3>
+        <p>Two-person rule (demo): enter approver initials to proceed.</p>
+        <input class="text small" @bind="Approve.Approver1" placeholder="Initials 1" />
+        <input class="text small" @bind="Approve.Approver2" placeholder="Initials 2" />
+        <button class="btn" @onclick="(()=>Step=2)">Back</button>
+        <button class="btn primary" disabled="@(!Approve.IsValid)" @onclick="(()=>Step=4)">Ready to Send</button>
+    </div>
+}
+else if (Step == 4)
+{
+    <div class="pane">
+        <h3>Send &amp; Monitor</h3>
+        @if (!Sent)
+        {
+            <button class="btn primary" @onclick="SendAll">Broadcast @Queue.Selected.Count action(s)</button>
+        }
+        else
+        {
+            <p>Dispatch queued. Refresh to see latest status.</p>
+            @foreach (var kvp in Jobs)
+            {
+                var job = kvp.Value;
+                <div class="job">
+                    <div><strong>@job.Item.Title</strong> — created @job.CreatedUtc.ToLocalTime()</div>
+                    @foreach (var d in job.Deliveries)
+                    {
+                        <div class="pill">@(d.Channel): @d.Status (delivered @d.Delivered / failed @d.Failed)</div>
+                    }
+                </div>
+            }
+        }
+        <button class="btn" @onclick="(()=>Step=3)">Back</button>
+    </div>
+}

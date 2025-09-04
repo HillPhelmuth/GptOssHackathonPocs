@@ -18,6 +18,8 @@ public class WorldAgentAction
     public string? ActingAgent { get; set; }
     [JsonIgnore]
     public string? BriefDescription { get; set; }
+    [JsonIgnore]
+    public string? AgentImagePath { get; set; }
     /// <summary>
     /// The kind of action to perform.
     /// </summary>

@@ -7,6 +7,7 @@ using GptOssHackathonPocs.Core.Models;
 using GptOssHackathonPocs.Core.Models.Enrichment;
 using GptOssHackathonPocs.Core.Services;
 using GptOssHackathonPocs.Narrative.Core;
+using GptOssHackathonPocs.Narrative.Core.Services;
 using Microsoft.Extensions.Azure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -37,7 +38,8 @@ builder.Services.AddTriageEnrichment();
 // Narrative services
 builder.Services.AddSingleton<WorldState>();
 builder.Services.AddScoped<AiAgentOrchestration>();
-builder.Services.AddScoped<NarrativeOrchestration>();
+builder.Services.AddScoped<INarrativeOrchestration, NarrativeOrchestration>();
+builder.Services.AddScoped<IBeatEngine, BeatEngine>();
 // Program.cs (additions)
 builder.Services.AddHttpClient<NwsGeometryResolver>("nws", c =>
 {

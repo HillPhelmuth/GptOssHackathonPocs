@@ -16,7 +16,13 @@ public class WorldState : INotifyPropertyChanged
     private List<WorldAgentAction> _recentActions = [];
     public event PropertyChangedEventHandler? PropertyChanged;
     public event Action<string>? LastAgentUpdated;
+    public string Name
+    {
+        get => WorldAgents.Name;
+        set => WorldAgents.Name = value;
+    }
 
+    public string Description => WorldAgents.Description;
     public WorldAgents WorldAgents
     {
         get

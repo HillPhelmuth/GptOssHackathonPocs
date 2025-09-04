@@ -9,7 +9,7 @@
                     <div class="brand-icon"></div>
                     <div>
                         <h1 class="brand-title">The Emergent Narrative Simulator</h1>
-                        <p class="brand-subtitle">Vespera Station: Armistice Era</p>
+                        <p class="brand-subtitle">@WorldState.Name - @WorldState.Description</p>
                     </div>
                 </div>
                 <div class="header-right">
@@ -31,7 +31,16 @@
         <div class="main-grid @( _showWorldController ? string.Empty : "no-right")" @ref="_grid">
             <!-- Left Column - Event Feed -->
             <div class="col">
-                <EventFeed Actions="@_actions" />
+                <button @onclick="@(() => _showComics = !_showComics)">@(_showComics ? "Events":"Comics")</button>
+                @if (_showComics)
+                {
+                    <BeatTicker Beats="_beats"></BeatTicker>
+                }
+                else
+                {
+                    <EventFeed Actions="@_actions" />
+                }
+                @* <EventFeed Actions="@_actions"/> *@
             </div>
             <!-- Gutter between col 1 and 2 -->
             <div class="gutter" data-gutter="1" aria-hidden="true"></div>

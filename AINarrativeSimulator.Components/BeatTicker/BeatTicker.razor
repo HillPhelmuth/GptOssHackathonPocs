@@ -1,0 +1,37 @@
+﻿@using GptOssHackathonPocs.Narrative.Core.Models
+@* @inject GptOssHackathonPocs.Narrative.Core.Services.IBeatEngine BeatEngine *@
+
+<div class="beat-ticker">
+    @if (Beats.Count == 0)
+    {
+        <div class="empty">Warming up… beats will appear as the world ticks.</div>
+    }
+    else
+    {
+        @foreach (var b in Beats)
+        {
+            <article class="beat @MoodClass(b.Mood)">
+                <header>
+                    <h4>@b.Title</h4>
+                    <div class="meta">
+                        <span>@b.WindowStartUtc.ToLocalTime().ToString("HH:mm:ss")–@b.WindowEndUtc.ToLocalTime().ToString("HH:mm:ss")</span>
+                        <span>tension @b.Tension</span>
+                        <span>@b.SourceActionCount actions</span>
+                    </div>
+                </header>
+                <p class="summary">@b.Summary</p>
+                @if (!string.IsNullOrWhiteSpace(b.KeyQuote))
+                {
+                    <blockquote>“@b.KeyQuote”</blockquote>
+                }
+                <footer>
+                    @foreach (var t in b.Tags.Take(6))
+                    {
+                        <span class="chip">#@t</span>
+                    }
+                    <span class="chip chip-cont">@b.ContinuityKey</span>
+                </footer>
+            </article>
+        }
+    }
+</div>

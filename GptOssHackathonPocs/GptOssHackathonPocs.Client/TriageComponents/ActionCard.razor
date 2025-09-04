@@ -1,0 +1,30 @@
+
+<div class="action-card">
+    <div class="row">
+        <div class="col">
+            <div class="title">@Item.Title</div>
+            <div class="meta">
+                <span class="pill priority-@Item.Priority.ToLowerInvariant()">Priority: @Item.Priority</span>
+                <span class="pill">Audience: @Item.Audience</span>
+                <span class="pill">Severity: @Item.SeverityLevel</span>
+                <span class="pill">Urgency: @Item.UrgencyLevel</span>
+            </div>
+        </div>
+        <div class="col-auto">
+            <button class="btn" @onclick="Toggle">@((Selected ? "Deselect" : "Select"))</button>
+        </div>
+    </div>
+    <p class="desc">@Item.Description</p>
+    <details>
+        <summary>Rationale &amp; Evidence</summary>
+        <div class="rationale">@Item.Rationale</div>
+        @if (Item.EvidenceLabels?.Length > 0)
+        {
+            <div class="evidence">
+                <strong>Evidence labels:</strong> @string.Join(", ", Item.EvidenceLabels)
+            </div>
+        }
+        <div class="tools"><strong>Suggested tools:</strong> @string.Join(", ", Item.RequiredTools.Select(x => x.ToString()))</div>
+        <pre class="instructions">@Item.Instructions</pre>
+    </details>
+</div>

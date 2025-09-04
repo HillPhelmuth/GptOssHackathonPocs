@@ -1,0 +1,107 @@
+.beat-ticker {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: 80vh;
+    overflow: auto;
+    color:white;
+}
+
+.beat {
+    border: 1px solid #2b3142;
+    border-left-width: 6px;
+    border-radius: 12px;
+    padding: 12px 14px;
+    background: #0e1320;
+    box-shadow: 0 6px 12px rgba(0,0,0,.25);
+}
+
+    .beat header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 8px;
+    }
+
+    .beat h4 {
+        margin: 0;
+        font-size: 1.05rem;
+    }
+
+    .beat .meta {
+        display: flex;
+        gap: 10px;
+        opacity: .8;
+        font-size: .85rem;
+    }
+
+.summary {
+    margin: 6px 0 4px 0;
+}
+
+blockquote {
+    margin: 6px 0;
+    opacity: .9;
+    border-left: 3px solid #3b4560;
+    padding-left: 10px;
+}
+
+footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.chip {
+    font-size: .8rem;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid #3a4156;
+    background: #182033;
+}
+
+.chip-cont {
+    background: #1a2638;
+    font-style: italic;
+}
+
+/* mood accents */
+.m-tense {
+    border-left-color: #e76a7a;
+}
+
+.m-hopeful {
+    border-left-color: #6bd39a;
+}
+
+.m-anxious {
+    border-left-color: #f0b36d;
+}
+
+.m-determined {
+    border-left-color: #7ab3ff;
+}
+
+.m-chaotic {
+    border-left-color: #d96bf0;
+}
+
+.m-solemn {
+    border-left-color: #8aa0b3;
+}
+
+.m-jubilant {
+    border-left-color: #ffd166;
+}
+
+.m-neutral {
+    border-left-color: #8b9bb8;
+}
+
+.empty {
+    opacity: .7;
+    text-align: center;
+    padding: 18px;
+}

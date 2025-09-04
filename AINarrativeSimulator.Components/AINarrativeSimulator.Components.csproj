@@ -8,6 +8,13 @@
     <UserSecretsId>ca9c757c-55a4-4f67-8af5-13d71fd24b40</UserSecretsId>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="ComicPanels\**" />
+    <Content Remove="ComicPanels\**" />
+    <EmbeddedResource Remove="ComicPanels\**" />
+    <None Remove="ComicPanels\**" />
+  </ItemGroup>
+
 
   <ItemGroup>
     <SupportedPlatform Include="browser" />
@@ -21,6 +28,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GptOssHackathonPocs.Narrative.Core\GptOssHackathonPocs.Narrative.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\Images\" />
   </ItemGroup>
 
 </Project>
