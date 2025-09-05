@@ -31,7 +31,13 @@
         <div class="main-grid @( _showWorldController ? string.Empty : "no-right")" @ref="_grid">
             <!-- Left Column - Event Feed -->
             <div class="col">
-                <button @onclick="@(() => _showComics = !_showComics)">@(_showComics ? "Events":"Comics")</button>
+                <div class="view-toggle" title="Toggle between Beats and Events">
+                    <label class="switch">
+                        <input type="checkbox" aria-label="Toggle view" @bind="_showComics" />
+                        <span class="slider"></span>
+                    </label>
+                    <span class="toggle-text">@(_showComics ? "Beats" : "Events")</span>
+                </div>
                 @if (_showComics)
                 {
                     <BeatTicker Beats="_beats"></BeatTicker>

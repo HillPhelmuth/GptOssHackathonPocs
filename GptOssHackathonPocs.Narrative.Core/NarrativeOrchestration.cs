@@ -154,16 +154,24 @@ public class NarrativeOrchestration : INarrativeOrchestration
 
     public async Task<T?> ExecuteLlmPrompt<T>(string inputPrompt, string model = "openai/gpt-oss-20b", CancellationToken ct = default)
     {
+        var executionSettings = new OpenAIPromptExecutionSettings() { ResponseFormat = typeof(T) };
+        Console.WriteLine($"Execution settings for generic type prompt:\n\n{typeof(T).Name})");
         var response = await ExecuteLlmPrompt(inputPrompt, model,
-            new OpenAIPromptExecutionSettings() { ResponseFormat = typeof(T) }, ct);
-        return JsonSerializer.Deserialize<T>(response);
+            executionSettings, ct);
+        var json = StripCodeFences(response);
+        return JsonSerializer.Deserialize<T>(json);
     }
 
     public async Task<string?> ExecuteLlmPrompt(string inputPrompt, string model = "openai/gpt-oss-20b",
         OpenAIPromptExecutionSettings? settings = null, CancellationToken ct = default)
     {
         var kernel = CreateKernel(model);
-        return await kernel.InvokePromptAsync<string>(inputPrompt, cancellationToken:ct);
+        return await kernel.InvokePromptAsync<string>(inputPrompt, new KernelArguments(settings), cancellationToken:ct);
+    }
+    private static string StripCodeFences(string s)
+    {
+        s = s.Replace("```json", "").Replace("```", "");
+        return s.Trim();
     }
     public async Task GenerateAgents(string input, int numberOfAgents = 3)
     {

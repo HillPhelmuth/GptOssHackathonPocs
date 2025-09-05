@@ -40,7 +40,7 @@ public partial class Main
 
     private bool _showComics;
     // Throttling for local storage writes of agents
-    private static readonly TimeSpan AgentsPersistInterval = TimeSpan.FromMinutes(5);
+    private static readonly TimeSpan AgentsPersistInterval = TimeSpan.FromMinutes(15);
     private DateTime _lastAgentsPersistedUtc = DateTime.MinValue;
     private DateTime _lastWorldStatePersistedUtc = DateTime.MinValue;
     private int _seenHash;
@@ -189,6 +189,9 @@ public partial class Main
                         await LocalStorage.SetItemAsync($"worldstate-{DateTime.Now:hh:mm:ss}", WorldState);
                         _lastWorldStatePersistedUtc = nowUtc2;
                     }
+                    await InvokeAsync(StateHasChanged);
+                    break;
+                case nameof(WorldState.Name):
                     await InvokeAsync(StateHasChanged);
                     break;
             }

@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 namespace GptOssHackathonPocs.Narrative.Core.Services;
 
@@ -23,31 +24,21 @@ public interface IBeatEngine
     event Action<BeatSummary>? OnBeat;
 }
 
-public sealed class BeatEngine : IBeatEngine, IDisposable
+public sealed class BeatEngine(INarrativeOrchestration orchestration) : IBeatEngine, IDisposable
 {
-    private readonly INarrativeOrchestration _orchestration;
-    private readonly TimeSpan _window;
-    private readonly int _minActions;
-    private readonly string _model;
+    private readonly TimeSpan _window = TimeSpan.FromSeconds(5); // tune: 3–8s works well
+    private int _minActions = 6;
+    private string _model = "openai/gpt-oss-20b";
     private readonly ConcurrentQueue<WorldAgentAction> _buffer = new();
     private Timer? _timer;
     private volatile bool _running;
-    private readonly TimeSpan _idleFlush;
+    private readonly TimeSpan _idleFlush = TimeSpan.FromMinutes(1);
     public event Action<BeatSummary>? OnBeat;
     private DateTime _lastBeatUtc = DateTime.MinValue;
-    public BeatEngine(INarrativeOrchestration orchestration,
-        TimeSpan? window = null,
-        int minActions = 6,
-        string model = "openai/gpt-oss-20b")
-    {
-        _orchestration = orchestration;
-        _window = window ?? TimeSpan.FromSeconds(5);  // tune: 3–8s works well
-        _minActions = Math.Max(1, minActions);
-        _model = model;
-    }
 
     public void Add(WorldAgentAction action)
     {
+        if (action.Type is ActionType.None or ActionType.Error) return;
         Console.WriteLine($"Add action to buffer from: {action.ActingAgent}");
         _buffer.Enqueue(action);
     }
@@ -99,13 +90,13 @@ public sealed class BeatEngine : IBeatEngine, IDisposable
         var payload = string.Join("\n\n", batch.Select(a => a.ToTypeMarkdown()).Select(x => $"{x.Item1} -> {x.Item2}"));
 
         var prompt = BuildBeatPrompt(payload, start, end);
-
-        string? raw = null;
+        var beatResponseJson = "";
         try
         {
-
-            var beat = await _orchestration.ExecuteLlmPrompt<BeatSummary>(prompt, _model, ct);
-
+            var settings = new OpenAIPromptExecutionSettings()
+                { ResponseFormat = typeof(BeatSummary), ReasoningEffort = "high" };
+            beatResponseJson = await orchestration.ExecuteLlmPrompt(prompt, _model, settings, ct);
+            var beat = JsonSerializer.Deserialize<BeatSummary>(beatResponseJson);
             if (beat is null) return;
 
             beat.WindowStartUtc = start;
@@ -118,7 +109,7 @@ public sealed class BeatEngine : IBeatEngine, IDisposable
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"TryAddBeat failed for: {prompt}\n\nError:\n{ex}");
+            Console.WriteLine($"TryAddBeat failed.Output: {beatResponseJson}\n\nError:\n{ex}");
         }
     }
 
@@ -132,38 +123,17 @@ public sealed class BeatEngine : IBeatEngine, IDisposable
         }
         return list.ToArray();
     }
-
-    // trick: local static alias gives us access to the instance buffer via closure-less indirection
-    // but we can’t do that cleanly; instead, inline the normal approach:
-    private WorldAgentAction[] DequeueUpToInstance(int n)
-    {
-        var list = new System.Collections.Generic.List<WorldAgentAction>(n);
-        while (n > 0 && _buffer.TryDequeue(out var a))
-        {
-            list.Add(a);
-            n--;
-        }
-        return list.ToArray();
-    }
-
-    // Rewire DequeueUpTo to instance version (compiler-friendly)
-    private WorldAgentAction[] DequeueUpToCompat(int n) => DequeueUpToInstance(n);
-
     
-
     private static string BuildBeatPrompt(string actionsJson, DateTime startUtc, DateTime endUtc)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("System: You are the Narrative Beat Compiler for a fast-ticking sci-fi station.");
+        sb.AppendLine("System: You are the Narrative Beat Dramatizer for a fast-ticking narrative.");
         sb.AppendLine("Rules:");
-        sb.AppendLine("- Compress ONLY the events you are given. Do not invent new events.");
-        sb.AppendLine("- Output STRICT JSON matching the schema below. No prose, no explanations.");
-        sb.AppendLine("- Keep 'Title' ≤ 8 words. 'Summary' 2–3 sentences, concrete and readable.");
-        sb.AppendLine("- 'ContinuityKey' must be a SHORT stable phrase (main actors + conflict) reused across beats.");
-        sb.AppendLine("- 'Mood' ∈ [tense, hopeful, anxious, determined, chaotic, solemn, jubilant, neutral].");
+        sb.AppendLine("- Dramatize ONLY the events you are given. Do not invent new events.");
+        sb.AppendLine("- Keep 'Title' ≤ 8 words. 'Dramatization' should be interesting and story-worthy 1-3 paragraphs.");
+        sb.AppendLine($"- 'Mood' ∈ {string.Join(", ", Enum.GetNames<Mood>())}.");
         sb.AppendLine("- 'Tension' is 0–100 (0=calm, 100=crisis).");
         sb.AppendLine();
-        sb.AppendLine($"WindowUtc: {startUtc:O} → {endUtc:O}");
         sb.AppendLine("Actions:");
         sb.AppendLine(actionsJson);
         sb.AppendLine();

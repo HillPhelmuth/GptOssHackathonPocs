@@ -67,38 +67,29 @@ footer {
     font-style: italic;
 }
 
-/* mood accents */
-.m-tense {
-    border-left-color: #e76a7a;
-}
-
-.m-hopeful {
-    border-left-color: #6bd39a;
-}
-
-.m-anxious {
-    border-left-color: #f0b36d;
-}
-
-.m-determined {
-    border-left-color: #7ab3ff;
-}
-
-.m-chaotic {
-    border-left-color: #d96bf0;
-}
-
-.m-solemn {
-    border-left-color: #8aa0b3;
-}
-
-.m-jubilant {
-    border-left-color: #ffd166;
-}
-
-.m-neutral {
-    border-left-color: #8b9bb8;
-}
+/* mood accents - enum based */
+.m-neutral { border-left-color: #8b9bb8; }
+.m-anxious { border-left-color: #f0b36d; }
+.m-suspicious { border-left-color: #ff7a7a; }
+.m-tired { border-left-color: #9aa5b1; }
+.m-optimistic { border-left-color: #6bd39a; }
+.m-irritated { border-left-color: #ff8a80; }
+.m-hopeful { border-left-color: #6bd39a; }
+.m-resolute { border-left-color: #5aa9ff; }
+.m-determined { border-left-color: #7ab3ff; }
+.m-nostalgic { border-left-color: #c3a6ff; }
+.m-frustrated { border-left-color: #ff6b6b; }
+.m-hungry { border-left-color: #ffb86b; }
+.m-concerned { border-left-color: #ffcc66; }
+.m-confident { border-left-color: #50fa7b; }
+.m-busy { border-left-color: #a0aec0; }
+.m-vigilant { border-left-color: #ff7f50; }
+.m-burnedout { border-left-color: #778899; }
+.m-amused { border-left-color: #ffd166; }
+.m-measured { border-left-color: #9ec5fe; }
+.m-energetic { border-left-color: #ff9f1c; }
+.m-restless { border-left-color: #f4a261; }
+.m-violent { border-left-color: #e76a7a; }
 
 .empty {
     opacity: .7;

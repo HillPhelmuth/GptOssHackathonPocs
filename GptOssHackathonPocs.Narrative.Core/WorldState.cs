@@ -19,7 +19,11 @@ public class WorldState : INotifyPropertyChanged
     public string Name
     {
         get => WorldAgents.Name;
-        set => WorldAgents.Name = value;
+        set
+        {
+            WorldAgents.Name = value;
+            OnPropertyChanged();
+        }
     }
 
     public string Description => WorldAgents.Description;

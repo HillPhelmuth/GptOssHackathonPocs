@@ -11,18 +11,6 @@ public partial class BeatTicker
     [Inject]
     private IBeatEngine BeatEngine { get; set; } = default!;
 
-
-
-   
-    private static string MoodClass(string mood) => mood.ToLowerInvariant() switch
-    {
-        "tense" => "m-tense",
-        "hopeful" => "m-hopeful",
-        "anxious" => "m-anxious",
-        "determined" => "m-determined",
-        "chaotic" => "m-chaotic",
-        "solemn" => "m-solemn",
-        "jubilant" => "m-jubilant",
-        _ => "m-neutral"
-    };
+    // Updated to use the Mood enum and map directly to CSS class names based on the enum value
+    private static string MoodClass(Mood mood) => $"m-{mood.ToString().ToLowerInvariant()}";
 }

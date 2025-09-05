@@ -64,7 +64,7 @@ internal class OpenRouterReasoningHandler(HttpMessageHandler innerHandler, ILogg
                     };
                     _output.LogInformation("Providers: " + string.Join(", ", providers.Select(p => p.GetValue<string>())));
                     // Remove "strict" property from response_format.json_schema if present
-                    if (root["response_format"] is JsonObject responseFormat && responseFormat["json_schema"] is JsonObject jsonSchema)
+                    if (root["response_format"] is JsonObject responseFormat && responseFormat["json_schema"] is JsonObject jsonSchema && providers.Contains("Cerebras"))
                     {
                         jsonSchema.Remove("strict");
                     }
@@ -72,7 +72,7 @@ internal class OpenRouterReasoningHandler(HttpMessageHandler innerHandler, ILogg
                     // Serialize the modified content back into the request
                     var modifiedContent = root.ToJsonString();
                     request.Content = new StringContent(modifiedContent, Encoding.UTF8, "application/json");
-                    //_output.LogInformation("=== REQUEST ===\n\n" + modifiedContent);
+                    _output.LogInformation("=== REQUEST ===\n\n" + modifiedContent);
                 }
             }
             catch (JsonException)
@@ -131,7 +131,7 @@ internal class OpenRouterReasoningHandler(HttpMessageHandler innerHandler, ILogg
             { IsSuccessStatusCode: true, Content.Headers.ContentType.MediaType: "application/json" }) return response;
 
         var originalJson = await response.Content.ReadAsStringAsync(cancellationToken);
-        _output.LogInformation("=== RESPONSE ===\n" + originalJson);
+        //_output.LogInformation("=== RESPONSE ===\n" + originalJson);
         if (string.IsNullOrWhiteSpace(originalJson)) return response;
 
 
